@@ -22,7 +22,7 @@ Found in live tests with Chrome for Testing 156 and the WebMCP flag on. "Fixed i
 12. **Audit setting and old hosts.** A running native host picks up the audit setting on each request, but a host started from older code keeps auditing until Chrome restarts it.
 13. **UI not built yet.** Hand-off "Run in agent" is disabled. Discover categories are guessed by local rules and shown as "(guessed)". The opt-in setup toggles aren't built.
 14. **With the WebMCP flag on, every page has `document.modelContext`.** So a site without tools shows "No WebMCP tools on this page" rather than "WebMCP not available".
-15. **Not verified live:** the badge's `popup.html?view=page` fallback (unit-tested only). The one-time copy from `~/.webmcp-tinker` to `~/.secret-menu` has now run live (Nov 1, 2026), after a fix that treats a lock file left by a Chrome that is no longer running as stale.
+15. **Not verified live:** the badge's `popup.html?view=page` fallback (unit-tested only).
 
 ## Fixed in code, pending live verification
 

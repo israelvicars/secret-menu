@@ -1,6 +1,6 @@
 import { siteSchema } from "../lib/core.mjs";
 import { createInterface } from "node:readline";
-import { APPROVALS_DIR, DATA_HOME, OPENED_TABS_PATH, POLICY_PATH, envWithFallback } from "./paths.mjs";
+import { APPROVALS_DIR, DATA_HOME, OPENED_TABS_PATH, POLICY_PATH } from "./paths.mjs";
 import { isOpenedBySecretMenu, loadOpened, recordOpened } from "../lib/opened-tabs.mjs";
 import { MUTATING_TOOL, READ_ONLY_RECIPE_TOOLS, readOnlyRefusalFor, RECIPES, compareShopify, renderComparison } from "../lib/recipes.mjs";
 import { cacheExplain, candidateFrom, findSites, readCandidates, recordCandidate, traceStep } from "../lib/learn.mjs";
@@ -8,11 +8,11 @@ import { classifyTool } from "../lib/explain.mjs";
 import { decideTool, loadPolicy, siteFor } from "../lib/policy.mjs";
 import { explainTools, renderExplain } from "../lib/explain.mjs";
 
-// Flags: secret-menu mcp [--read-only] [--allow-tools a,b,c]   (or SECRET_MENU_MCP_READ_ONLY=1, SECRET_MENU_MCP_ALLOW_TOOLS=a,b; the old TINKER_MCP_* names still work)
+// Flags: secret-menu mcp [--read-only] [--allow-tools a,b,c]   (or SECRET_MENU_MCP_READ_ONLY=1, SECRET_MENU_MCP_ALLOW_TOOLS=a,b)
 const argv = process.argv.slice(3);
 const argAfter = (name) => { const i = argv.indexOf(name); if (i >= 0) return argv[i + 1]; const eq = argv.find((x) => x.startsWith(`${name}=`)); return eq ? eq.slice(name.length + 1) : undefined; };
-const ALLOW_TOOLS = (argAfter("--allow-tools") ?? envWithFallback("SECRET_MENU_MCP_ALLOW_TOOLS", "TINKER_MCP_ALLOW_TOOLS") ?? "").split(",").map((x) => x.trim()).filter(Boolean);
-const READ_ONLY = argv.includes("--read-only") || envWithFallback("SECRET_MENU_MCP_READ_ONLY", "TINKER_MCP_READ_ONLY") === "1" || ALLOW_TOOLS.length > 0;
+const ALLOW_TOOLS = (argAfter("--allow-tools") ?? process.env.SECRET_MENU_MCP_ALLOW_TOOLS ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+const READ_ONLY = argv.includes("--read-only") || process.env.SECRET_MENU_MCP_READ_ONLY === "1" || ALLOW_TOOLS.length > 0;
 const sessionSteps = [];
 import { normalizePageContext } from "../lib/page-context.mjs";
 import { fileURLToPath } from "node:url";

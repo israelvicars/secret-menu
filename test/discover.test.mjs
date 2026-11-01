@@ -5,7 +5,7 @@ import { categorize, directory, displayName, recommend, searchCards, siteCards, 
 const shop = (host, title, verifiedAt, tools = 12) => ({ schema: "secret-menu.index/v1", indexKey: `https://${host}`, verifiedAt, title, description: null, counts: { tools }, abilities: [
   { title: "Search catalog and see cart", label: "safe", toolNames: ["search_catalog", "get_cart"] },
   { title: "Proceed to checkout", label: "spends money", toolNames: ["proceed_to_checkout"] }] });
-const radar = { schema: "tinker.index/v1", indexKey: "https://radar.cloudflare.com", verifiedAt: "2026-10-30T00:00:00Z", title: "Cloudflare Radar", counts: { tools: 6 }, abilities: [{ title: "Set date range", label: "changes the view", toolNames: ["set-date-range", "get-current-view"] }, { title: "Traffic stats", label: "safe", toolNames: ["get_traffic_stats"] }] };
+const radar = { schema: "secret-menu.index/v1", indexKey: "https://radar.cloudflare.com", verifiedAt: "2026-10-30T00:00:00Z", title: "Cloudflare Radar", counts: { tools: 6 }, abilities: [{ title: "Set date range", label: "changes the view", toolNames: ["set-date-range", "get-current-view"] }, { title: "Traffic stats", label: "safe", toolNames: ["get_traffic_stats"] }] };
 
 test("categorize: Shopify-style tools are Shopping; says it's a guess", () => {
   const c = categorize(shop("www.allbirds.com", "Allbirds: Shoes", "2026-10-31T00:00:00Z"));

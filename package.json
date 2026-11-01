@@ -5,8 +5,7 @@
   "private": true,
   "type": "module",
   "bin": {
-    "secret-menu": "bin/secret-menu",
-    "tinker": "bin/tinker"
+    "secret-menu": "bin/secret-menu"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",

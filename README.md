@@ -4,11 +4,33 @@
 
 Some websites now publish tools for AI agents through WebMCP (`document.modelContext`): "search the catalog", "show a variant", "add to cart". Secret Menu finds those tools in your browser tabs, explains in plain language what they let you do, and lets an agent call them as you, through a local MCP server and a Chrome extension.
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/badge-dark.png">
+    <img src="docs/screenshots/badge-light.png" width="460" alt="The in-page badge: What more can I do here? 14 WebMCP tools">
+  </picture>
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/popup-dark.png">
+      <img src="docs/screenshots/popup-light.png" alt="The toolbar popup: the page's tools grouped into abilities labelled safe, needs sign-in, changes data and spends money">
+    </picture></td>
+    <td width="50%"><picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/popup-expanded-dark.png">
+      <img src="docs/screenshots/popup-expanded-light.png" alt="An expanded ability: its tool names, where each label came from, and a ready-to-copy agent prompt">
+    </picture></td>
+  </tr>
+</table>
+
+<sub>The badge and popup on Secret Menu's built-in test page (<code>secret-menu serve</code>), a fake shop with 14 tools. Nothing on it is real.</sub>
+
 > [!IMPORTANT]
 > **WebMCP is still experimental, and so is this project.**
 >
 > - **Stock Chrome barely shows these tools yet.** Without a flag, Chrome only exposes WebMCP tools on sites taking part in the WebMCP origin trial (Chrome 149 to 162, ending March 30, 2027). There is no ship date for WebMCP in stable Chrome yet.
-> - **Every test so far ran with the WebMCP flag on.** `secret-menu launch` starts its own Chrome with `--enable-features=WebMCP`. Which sites work in a Chrome without the flag has not been checked.
+> - **Most testing ran with the WebMCP flag on.** `secret-menu launch` starts its own Chrome with `--enable-features=WebMCP`. In one check without the flag, the test browser (Chrome for Testing 156) still showed tools on three sample stores. Stock Chrome without the flag hasn't been checked.
 > - **Today it needs Chrome for Testing on an Apple Silicon Mac.** The launcher only looks for a `mac-arm64` Chrome for Testing build. Other platforms aren't supported yet.
 > - **Safety controls are opt-in.** By default calls run, and your agent's own approval prompt is the check. See [Safety model](#safety-model).
 
@@ -24,41 +46,45 @@ Some websites now publish tools for AI agents through WebMCP (`document.modelCon
 
 - An Apple Silicon Mac
 - Node.js 22
-- Chrome for Testing 156, installed by the command below. Secret Menu runs its own Chrome with its own profile and never touches your everyday Chrome.
+- Chrome for Testing 156, installed by the steps below. Secret Menu runs its own Chrome with its own profile and never touches your everyday Chrome.
 
-## Quickstart
+Secret Menu isn't in the Chrome Web Store or on npm yet. You run it from a clone.
+
+## Install
+
+There are two parts. The **extension** shows you a page's tools while you browse. The **MCP server** gives an agent those tools. Pick one or use both.
+
+First, the shared setup:
 
 ```sh
 git clone https://github.com/israelvicars/secret-menu.git
 cd secret-menu
 
-# 1. Chrome for Testing, into Secret Menu's data folder
+# Chrome for Testing, into Secret Menu's data folder
 npx @puppeteer/browsers install chrome@156 --path "$HOME/.secret-menu/browsers"
 
-# 2. Build the extension (written to ext/.output/chrome-mv3)
+# Build the extension (written to ext/.output/chrome-mv3)
 npm --prefix ext install
 npm run ext:build
-
-# 3. Serve the built-in test page (http://127.0.0.1:8765/)
-./bin/secret-menu serve
 ```
 
-In a second terminal:
+### Option 1: Extension only
+
+**What you get:** an in-page badge on pages that have WebMCP tools, and a toolbar popup that explains them as abilities (safe, needs sign-in, changes data, spends money), with the real tool names and a ready-to-copy agent prompt. The popup only reads tools; it never calls them.
 
 ```sh
-./bin/secret-menu launch http://127.0.0.1:8765/   # starts the Secret Menu Chrome with the extension
-./bin/secret-menu tabs                            # tab ids
-./bin/secret-menu tools                           # tools on the active tab
-./bin/secret-menu explain --tab <id>              # what those tools let you do
-./bin/secret-menu call get_status                 # call one
-./bin/secret-menu stop
+./bin/secret-menu launch     # opens the Secret Menu Chrome with the extension loaded
 ```
 
-`launch` loads the extension and installs its native messaging host (`com.secretmenu.bridge`) into Secret Menu's own Chrome profile. Sign in to sites inside that Chrome if you want tools that need an account.
+Browse in that Chrome. `launch` also turns on the WebMCP flag and installs the native messaging host (`com.secretmenu.bridge`) into that Chrome's own profile, which the Discover page uses to list sites you've explained. Stop it with `./bin/secret-menu stop`.
 
-## Use it from an agent (MCP)
+You can also load `ext/.output/chrome-mv3` into another Chrome (155 or later) from `chrome://extensions` with Developer mode on and **Load unpacked**. That setup is untested. The badge and popup run inside the extension, but Discover needs the bridge and won't load there, and tools only show up where that Chrome exposes WebMCP.
 
-Add Secret Menu as a stdio MCP server. Use the absolute path to your clone:
+### Option 2: MCP only
+
+**What you get:** an agent can find sites, open them, read their tools and call them as the signed-in user. The tools are `find_sites`, `list_recipes`, `run_recipe`, `open_site`, `list_tabs`, `list_page_tools`, `explain_page` and `call_page_tool` (see [MCP tools](#mcp-tools)).
+
+Add Secret Menu to your MCP client as a stdio server, using the absolute path to your clone:
 
 ```json
 {
@@ -71,9 +97,43 @@ Add Secret Menu as a stdio MCP server. Use the absolute path to your clone:
 }
 ```
 
-The MCP server works on its own and does more while the Secret Menu Chrome is running (`secret-menu launch`).
+The server starts without a browser, but then only `find_sites` and `list_recipes` work, from data already on your machine. Every tool that touches a page reaches it through the Secret Menu Chrome, where the extension is the bridge. So start it first, even if you never look at it:
 
-| Tool | Needs the browser | What it does |
+```sh
+./bin/secret-menu launch --headless   # or without --headless to watch
+```
+
+### Option 3: Both
+
+Run `./bin/secret-menu launch` (not headless) and add the MCP server as in Option 2. The extension and the MCP server talk through the native messaging host, so you and your agent see the same browser. This is the setup that has been tested most. It adds:
+
+- **Shared sign-in.** Sign in to a site in the Secret Menu Chrome, and the agent's calls run as you on that site.
+- **See what the agent sees.** The badge and popup show the same tools and labels the agent gets from `explain_page`.
+- **Hand-off.** The popup's agent prompt and the Hand off page name the page's real tools, ready to paste into an agent that has Secret Menu connected.
+- **Discover.** Sites you or your agent explain are saved to a local index, and the Discover page lists them.
+
+### Try it on the test page
+
+```sh
+./bin/secret-menu serve                           # test page on http://127.0.0.1:8765/
+```
+
+In a second terminal:
+
+```sh
+./bin/secret-menu launch http://127.0.0.1:8765/
+./bin/secret-menu tabs                            # tab ids
+./bin/secret-menu tools                           # tools on the active tab
+./bin/secret-menu explain --tab <id>              # what those tools let you do
+./bin/secret-menu call get_status                 # call one
+./bin/secret-menu stop
+```
+
+Sign in to sites inside the Secret Menu Chrome if you want tools that need an account.
+
+## MCP tools
+
+| Tool | Needs the Secret Menu Chrome | What it does |
 | --- | --- | --- |
 | `find_sites` | No | Search the local index of sites Secret Menu has already explained, for ones that can do a task. |
 | `list_recipes` | No | List ready-made multi-site recipes, plus sequences learned from earlier successful sessions. |
@@ -146,8 +206,6 @@ Secret Menu builds roads; it doesn't police them.
 - Data lives in `~/.secret-menu`. Change it with `SECRET_MENU_HOME`.
 - `SECRET_MENU_CHROME` overrides Chrome discovery.
 - `SECRET_MENU_MCP_READ_ONLY=1` and `SECRET_MENU_MCP_ALLOW_TOOLS=a,b` set MCP read-only mode.
-
-**Renamed from WebMCP Tinker.** `bin/tinker` still works as a deprecated alias. The old `WEBMCP_TINKER_*` and `TINKER_MCP_*` variables are still read, and an existing `~/.webmcp-tinker` folder is copied (never moved or deleted) to `~/.secret-menu` on the first `secret-menu launch`.
 
 ## Known issues and limits
 

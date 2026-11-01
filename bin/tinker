@@ -1,5 +1,0 @@
-#!/usr/bin/env node
-// Deprecated alias kept for old scripts and MCP configs: same CLI, new name.
-import { runCli } from "../lib/entry.mjs";
-console.error("note: `tinker` is now `secret-menu`; this alias will go away. Running: secret-menu " + process.argv.slice(2).join(" "));
-await runCli();

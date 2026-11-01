@@ -70,9 +70,8 @@ test("call_page_tool claims read-only only when the server enforces it", async (
   assert.equal(plain.annotations.readOnlyHint, false); assert.equal(ro.annotations.readOnlyHint, true);
 });
 
-test("read-only mode reads SECRET_MENU_MCP_READ_ONLY and still honors the old TINKER_MCP_READ_ONLY", async () => {
+test("read-only mode reads SECRET_MENU_MCP_READ_ONLY", async () => {
   const mode = async (env) => (await session([{ id: 1, method: "tools/call", params: { name: "list_recipes", arguments: {} } }], [], env))[0].result.structuredContent.mode;
   assert.equal(await mode({}), "normal");
   assert.equal(await mode({ SECRET_MENU_MCP_READ_ONLY: "1" }), "read-only");
-  assert.equal(await mode({ TINKER_MCP_READ_ONLY: "1" }), "read-only");
 });

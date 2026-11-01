@@ -8,7 +8,7 @@ Stable names and selectors that UI tests can rely on. Change them only together 
 message handler and copy, the popup message API, and the fixture contract below.
 `cd ext && npx tsc --noEmit && npx wxt build` type-checks and builds into `ext/.output/chrome-mv3`.
 
-Rename checks (no Chrome): `test/migrate.test.mjs` covers the `~/.webmcp-tinker` → `~/.secret-menu` copy on temp dirs (copy once, set same-name entries aside, never touch the old dir, wait while its profile is locked). `test/cli-names.test.mjs` covers `secret-menu --help`, the `bin/tinker` alias, package names and the host name. The extension ID is unchanged.
+Name checks (no Chrome): `test/cli-names.test.mjs` covers `secret-menu --help`, package names and the host name. The extension ID is unchanged.
 
 ## Toolbar and windows
 

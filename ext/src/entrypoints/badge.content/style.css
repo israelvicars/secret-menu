@@ -1,0 +1,31 @@
+/* Shadow-root styles for the in-page badge. :host is reset so page CSS can't reach in, and nothing
+   here can reach the page. Colors match the popup tokens (globals.css) and mockup 1-popup.html. */
+:host { all: initial; }
+.sm-badge {
+  --bg: #ffffff; --fg: #1f1f1f; --muted: #6b6b6b; --border: #e4e4e4; --hover: #f4f4f4;
+  position: fixed; right: 16px; bottom: 16px; z-index: 2147483646;
+  display: flex; align-items: stretch;
+  font: 13px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.18);
+  animation: sm-in 160ms ease-out;
+}
+.sm-badge[data-theme="dark"] {
+  --bg: #1d1d1f; --fg: #e8e8e8; --muted: #a8a8a8; --border: #333336; --hover: #2a2a2d;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.6);
+}
+.sm-badge[hidden] { display: none; }
+button { all: unset; box-sizing: border-box; cursor: pointer; color: inherit; font: inherit; }
+button:focus-visible { outline: 2px solid #7aa7ff; outline-offset: -2px; }
+.sm-open { display: flex; align-items: center; gap: 10px; padding: 8px 6px 8px 10px; border-radius: 13px 0 0 13px; }
+.sm-open:hover, .sm-close:hover { background: var(--hover); }
+/* The 🗝️ mark (lib/mark.ts): an SVG on its own parchment tile, so it stays crisp at any zoom and reads in light and dark. */
+.sm-icon { display: flex; flex: none; width: 28px; height: 28px; }
+.sm-icon svg { width: 100%; height: 100%; display: block; }
+.sm-text { display: flex; flex-direction: column; }
+.sm-title { font-weight: 600; }
+.sm-count { color: var(--muted); font-size: 12px; }
+.sm-close { display: flex; align-items: center; justify-content: center; width: 28px; font-size: 16px; color: var(--muted); border-radius: 0 13px 13px 0; }
+.sm-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@keyframes sm-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .sm-badge { animation: none; } }

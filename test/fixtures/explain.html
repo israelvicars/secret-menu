@@ -1,0 +1,17 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Secret Menu explain fixture</title>
+<meta name="description" content="A pretend shop for testing secret-menu explain: search products, order, and manage an account.">
+<meta property="og:site_name" content="Secret Menu Test Shop">
+<meta property="og:type" content="website">
+<h1>Secret Menu explain fixture</h1>
+<p>Fake shop with labeled, unlabeled and spending tools. Nothing here is real.</p>
+<button id="signin">Sign in (fake)</button>
+<pre id="log"></pre>
+<script type="module">
+const mc = document.modelContext; const log = (s) => document.querySelector("#log").textContent += `${s}\n`;
+if (!mc) { log("WebMCP unavailable"); throw new Error("document.modelContext missing"); }
+const { tools } = await import("./explain-tools.js");
+for (const t of tools) { try { await mc.registerTool(t); log(`registered ${t.name}`); } catch (e) { log(`FAILED ${t.name}: ${e.message}`); } }
+document.querySelector("#signin").onclick = () => localStorage.setItem("explain_user", "demo");
+</script>

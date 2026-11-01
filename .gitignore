@@ -1,0 +1,11 @@
+node_modules
+*.log
+ext/.output
+ext/.wxt
+.DS_Store
+.env
+.env.*
+*.pem
+*.crx
+evidence/
+node_modules/

@@ -1,0 +1,8 @@
+<!doctype html>
+<meta charset="utf-8"><title>Secret Menu churn B</title>
+<h1>Full-navigation fixture B</h1><a href="churn.html">Back to churn fixture</a><pre id="log"></pre>
+<script type="module">
+const log = document.querySelector("#log");
+if (!document.modelContext) log.textContent = "WebMCP unavailable";
+else { await document.modelContext.registerTool({ name: "get_b_info", description: "Identify fixture B.", inputSchema: { type: "object", properties: {} }, annotations: { readOnlyHint: true }, execute: async () => ({ fixture: "b", url: location.href }) }); log.textContent = "registered get_b_info"; }
+</script>

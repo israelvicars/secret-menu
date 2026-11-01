@@ -1,0 +1,73 @@
+{
+  "schema": "secret-menu.fixture-expected/v1",
+  "fixture": "test/fixtures/explain.html",
+  "url": "http://127.0.0.1:8765/explain.html",
+  "title": "Secret Menu explain fixture",
+  "note": "Rows the popup shows for this fixture, in order. Generated from explain-tools.js with lib/explain.mjs; checked by test/fixture-expected.test.mjs.",
+  "counts": {
+    "tools": 14,
+    "safe": 6,
+    "view": 0,
+    "signIn": 1,
+    "changes": 4,
+    "spends": 3
+  },
+  "abilities": [
+    {
+      "title": "Search products, see product and see store hours (+2 more)",
+      "label": "safe",
+      "labelFrom": "mixed: 3 from site hint, 2 guessed",
+      "toolNames": [
+        "fetch_reviews",
+        "get_product",
+        "get_store_hours",
+        "get_wishlist",
+        "search_products"
+      ]
+    },
+    {
+      "title": "Open help",
+      "label": "safe",
+      "labelFrom": "guessed",
+      "toolNames": [
+        "open_help"
+      ]
+    },
+    {
+      "title": "See your orders",
+      "label": "needs sign-in",
+      "labelFrom": "guessed",
+      "toolNames": [
+        "list_my_orders"
+      ]
+    },
+    {
+      "title": "Delete account, frobnicate and update profile",
+      "label": "changes data",
+      "labelFrom": "mixed: 1 from site hint, 2 guessed",
+      "toolNames": [
+        "delete_account",
+        "frobnicate",
+        "update_profile"
+      ]
+    },
+    {
+      "title": "Buy now, get gift card and place order",
+      "label": "spends money",
+      "labelFrom": "mixed: 1 from site hint, 2 guessed",
+      "toolNames": [
+        "buy_now",
+        "get_gift_card",
+        "place_order"
+      ]
+    },
+    {
+      "title": "Signin demo",
+      "label": "changes data",
+      "labelFrom": "guessed",
+      "toolNames": [
+        "sign_in_demo"
+      ]
+    }
+  ]
+}

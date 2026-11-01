@@ -1,0 +1,16 @@
+{
+  "name": "secret-menu",
+  "version": "0.1.0",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "secret-menu": "bin/secret-menu",
+    "tinker": "bin/tinker"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "ext:build": "npm --prefix ext run build",
+    "ext:dev": "npm --prefix ext run dev"
+  }
+}

@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Secret Menu churn fixture</title>
+<h1>Secret Menu churn fixture</h1>
+<button id="signin">Sign in (fake)</button> <button id="signout">Sign out</button>
+<a href="#/checkout">Checkout route</a> · <a href="#/home">Home route</a> · <a href="churn-b.html">Full navigation</a>
+<pre id="log"></pre>
+<script type="module">
+const loaded = new Date().toISOString(), log = (s) => document.querySelector("#log").textContent += `${new Date().toISOString()} ${s}\n`;
+const mc = document.modelContext; if (!mc) { log("WebMCP unavailable"); throw new Error("document.modelContext missing"); }
+const active = new Map(); let cartCount = 0;
+const session = () => ({ loggedIn: localStorage.getItem("secret_menu_user") === "demo", user: localStorage.getItem("secret_menu_user"), cartCount, sessionCookie: document.cookie.includes("secret_menu_session="), localStorageSession: Boolean(localStorage.getItem("secret_menu_user")), pageLoadedAt: loaded });
+async function add(tool) {
+  if (active.has(tool.name)) return;
+  const controller = new AbortController(); let method = "signal";
+  try { await mc.registerTool(tool, { signal: controller.signal }); active.set(tool.name, { controller, method }); }
+  catch { await mc.registerTool(tool); method = typeof mc.unregisterTool === "function" ? "unregisterTool" : "cannot unregister"; active.set(tool.name, { method }); }
+  log(`registered ${tool.name}; removal: ${method}`);
+}
+async function remove(name) { const item = active.get(name); if (!item) return; try { if (item.method === "signal") item.controller.abort(); else if (item.method === "unregisterTool") await mc.unregisterTool(name); else { log(`cannot unregister ${name}`); return; } active.delete(name); log(`removed ${name} via ${item.method}`); } catch (e) { log(`remove ${name} failed: ${e.message}`); } }
+const object = (properties = {}, required = []) => ({ type: "object", properties, required });
+await add({ name: "get_status", description: "Report the fake session and cart state.", inputSchema: object(), annotations: { readOnlyHint: true }, execute: async () => session() });
+await add({ name: "fake_sign_in", description: "Create a fake cookie and localStorage session.", inputSchema: object(), annotations: { readOnlyHint: false }, execute: async () => { document.cookie = `secret_menu_session=demo-${crypto.randomUUID()}; path=/; max-age=86400`; localStorage.setItem("secret_menu_user", "demo"); await sync(); return session(); } });
+async function sync() {
+  if (session().loggedIn) {
+    await add({ name: "get_account", description: "Read the fake signed-in account.", inputSchema: object(), annotations: { readOnlyHint: true }, execute: async () => ({ user: "demo" }) });
+    await add({ name: "add_to_cart", description: "Add an item to the fake cart.", inputSchema: object({ item: { type: "string", enum: ["tea", "coffee", "scone"], description: "Item to add" }, qty: { type: "integer", default: 1, description: "Quantity" } }, ["item"]), annotations: { readOnlyHint: false, consequentialHint: true }, execute: async ({ item, qty = 1 }) => ({ item, qty, cartCount: cartCount += qty }) });
+  } else { await remove("get_account"); await remove("add_to_cart"); }
+  if (location.hash === "#/checkout") await add({ name: "checkout", description: "Complete fake checkout.", inputSchema: object({ confirm: { type: "boolean", description: "Confirm checkout" } }, ["confirm"]), annotations: { readOnlyHint: false, consequentialHint: true }, execute: async ({ confirm }) => ({ checkedOut: confirm, cartCount }) }); else await remove("checkout");
+}
+document.querySelector("#signin").onclick = async () => { document.cookie = `secret_menu_session=demo-${crypto.randomUUID()}; path=/; max-age=86400`; localStorage.setItem("secret_menu_user", "demo"); await sync(); };
+document.querySelector("#signout").onclick = async () => { document.cookie = "secret_menu_session=; path=/; max-age=0"; localStorage.removeItem("secret_menu_user"); await sync(); };
+addEventListener("hashchange", sync); addEventListener("storage", sync); await sync();
+setTimeout(() => add({ name: "late_tool", description: "Appears three seconds after page load.", inputSchema: object(), annotations: { readOnlyHint: true }, execute: async () => ({ late: true }) }), 3000);
+</script>

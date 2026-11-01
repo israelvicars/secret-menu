@@ -1,0 +1,126 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Dark mode follows the .dark class that lib/theme.ts sets on <html> before first paint. */
+@custom-variant dark (&:is(.dark *));
+
+/* shadcn/ui tokens (neutral base), tuned for a dense, compact layout. */
+:root {
+  --radius: 0.5rem;
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.2 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0 0);
+  --primary: oklch(0.22 0 0);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.96 0 0);
+  --secondary-foreground: oklch(0.22 0 0);
+  --muted: oklch(0.965 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.95 0 0);
+  --accent-foreground: oklch(0.22 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.91 0 0);
+  --input: oklch(0.91 0 0);
+  --ring: oklch(0.6 0 0);
+  --code: oklch(0.965 0 0);
+  --code-foreground: oklch(0.35 0.02 250);
+  /* Safety labels (same five as secret-menu explain). */
+  --label-safe: oklch(0.93 0.06 150);
+  --label-safe-foreground: oklch(0.42 0.12 150);
+  --label-view: oklch(0.93 0.05 250);
+  --label-view-foreground: oklch(0.45 0.13 255);
+  --label-sign: oklch(0.94 0.07 90);
+  --label-sign-foreground: oklch(0.47 0.1 80);
+  --label-change: oklch(0.93 0.06 50);
+  --label-change-foreground: oklch(0.5 0.15 45);
+  --label-spend: oklch(0.93 0.05 15);
+  --label-spend-foreground: oklch(0.5 0.18 20);
+  --from-hint: oklch(0.5 0.12 150);
+  --from-guess: oklch(0.55 0.12 85);
+}
+
+.dark {
+  --background: oklch(0.205 0.002 286);
+  --foreground: oklch(0.93 0 0);
+  --card: oklch(0.235 0.003 286);
+  --card-foreground: oklch(0.93 0 0);
+  --popover: oklch(0.235 0.003 286);
+  --popover-foreground: oklch(0.93 0 0);
+  --primary: oklch(0.92 0 0);
+  --primary-foreground: oklch(0.2 0 0);
+  --secondary: oklch(0.27 0.003 286);
+  --secondary-foreground: oklch(0.93 0 0);
+  --muted: oklch(0.26 0.003 286);
+  --muted-foreground: oklch(0.68 0 0);
+  --accent: oklch(0.28 0.003 286);
+  --accent-foreground: oklch(0.93 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(0.29 0.004 286);
+  --input: oklch(0.32 0.004 286);
+  --ring: oklch(0.55 0 0);
+  --code: oklch(0.18 0.002 286);
+  --code-foreground: oklch(0.86 0.015 250);
+  --label-safe: oklch(0.3 0.05 150);
+  --label-safe-foreground: oklch(0.82 0.12 150);
+  --label-view: oklch(0.3 0.05 255);
+  --label-view-foreground: oklch(0.8 0.1 255);
+  --label-sign: oklch(0.32 0.05 90);
+  --label-sign-foreground: oklch(0.86 0.12 90);
+  --label-change: oklch(0.32 0.05 45);
+  --label-change-foreground: oklch(0.82 0.12 50);
+  --label-spend: oklch(0.31 0.06 15);
+  --label-spend-foreground: oklch(0.78 0.14 15);
+  --from-hint: oklch(0.8 0.1 150);
+  --from-guess: oklch(0.78 0.12 90);
+}
+
+@theme inline {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-code: var(--code);
+  --color-code-foreground: var(--code-foreground);
+  --color-label-safe: var(--label-safe);
+  --color-label-safe-foreground: var(--label-safe-foreground);
+  --color-label-view: var(--label-view);
+  --color-label-view-foreground: var(--label-view-foreground);
+  --color-label-sign: var(--label-sign);
+  --color-label-sign-foreground: var(--label-sign-foreground);
+  --color-label-change: var(--label-change);
+  --color-label-change-foreground: var(--label-change-foreground);
+  --color-label-spend: var(--label-spend);
+  --color-label-spend-foreground: var(--label-spend-foreground);
+  --color-from-hint: var(--from-hint);
+  --color-from-guess: var(--from-guess);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  html { color-scheme: light; }
+  html.dark { color-scheme: dark; }
+  body { @apply bg-background text-foreground font-sans antialiased; font-size: 13px; line-height: 1.45; }
+}

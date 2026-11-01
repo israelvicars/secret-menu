@@ -70,7 +70,7 @@ npm run ext:build
 
 ### Option 1: Extension only
 
-**What you get:** an in-page badge on pages that have WebMCP tools, and a toolbar popup that explains them as abilities (safe, needs sign-in, changes data, spends money), with the real tool names and a ready-to-copy agent prompt. The popup only reads tools; it never calls them.
+**What you get:** an in-page badge on pages that have WebMCP tools, and a toolbar popup that explains them as abilities (safe, changes the view, needs sign-in, changes data, spends money), with the real tool names and a ready-to-copy agent prompt. The popup only reads tools; it never calls them.
 
 ```sh
 ./bin/secret-menu launch     # opens the Secret Menu Chrome with the extension loaded

@@ -1,6 +1,27 @@
 # Testing Secret Menu (hooks for agent-desktop and CDP)
 
-Stable names and selectors that UI tests can rely on. Change them only together with this file.
+Stable names and selectors that UI tests can rely on. They are a supported contract, not internals:
+
+- popup root `#sm-main` (with `data-state`) and its state text `#sm-main-state`
+- effective theme `#sm-theme-status`
+- expanded rows `#sm-details-<n>`
+- the in-page badge's `data-opened` and `data-focused`
+- `data-testid="sm-mark"` on the 🗝️ mark
+- launch-tab tracking in `~/.secret-menu/run/opened-tabs.json`
+
+Renaming or removing one is a breaking change: update this file and its tests in the same commit.
+
+## Optional: desktop UI test tools
+
+Desktop UI tests drive the real Chrome window through the macOS accessibility tree with
+[agent-desktop](https://www.npmjs.com/package/agent-desktop). It's a development tool only; Secret Menu never needs it at runtime.
+
+```sh
+npm i -g agent-desktop
+```
+
+In System Settings > Privacy & Security, give **Accessibility** and **Screen Recording** to the app that launches it
+(your terminal, or the agent app that runs it).
 
 ## Unit tests
 
@@ -83,7 +104,10 @@ an earlier session first (tab ids restart).
 
 ## Screenshot harness
 
-`scripts/ui-shoot-v2.mjs` drives a test Chrome over CDP (port 9333, the one Secret Menu launched; never your everyday Chrome):
+`scripts/ui-shoot-v2.mjs` drives a test Chrome over loopback CDP on port 9333, never your everyday Chrome. `secret-menu launch`
+doesn't open a debugging port: start the test Chrome with `--remote-debugging-port=9333` yourself (for example by pointing
+`SECRET_MENU_CHROME` at a small wrapper script that adds it), and only while testing, because anything on the machine can
+drive a Chrome through that port without Secret Menu's checks.
 
 ```
 node scripts/ui-shoot-v2.mjs popup <tabId> <name> <outDir> light dark [--expand N] [--ax]
@@ -99,3 +123,9 @@ The mark (`ext/src/lib/mark.ts`) is decorative everywhere: `aria-hidden="true"`,
 accessible name or a document title. Names stay as before: badge region "Secret Menu", badge button
 "Secret Menu: see what this page's WebMCP tools let you do", popup/page titles "Secret Menu…". In the DOM the React
 surfaces carry `data-testid="sm-mark"`; in the badge's shadow root it is `.sm-icon svg`.
+
+## Stopping the test Chrome
+
+`secret-menu stop` sends SIGTERM and waits up to `--timeout SECONDS` (default 8). It never sends SIGKILL unless you pass
+`--kill`; without it, a Chrome that is still running after the timeout is reported and stop exits with code 4, so harnesses
+can use it safely and decide themselves. `--force` only skips the foreign-tab check. Unit tests: `test/stop.test.mjs`.

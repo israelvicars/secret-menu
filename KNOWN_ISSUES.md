@@ -9,7 +9,7 @@ Found in live tests with Chrome for Testing 156 and the WebMCP flag on. "Fixed i
 3. **Expired approvals are not audited.** Pending approvals that age out unused leave no audit record.
 4. **The audit anchor sits next to the log.** `audit.jsonl.head` detects records cut from the end of `audit.jsonl`, but someone who can edit both files can still hide truncation. A stronger anchor would live outside the data folder.
 5. **Late tools can still be missed.** `--wait-tools` waits for a 3.5 s quiet window (`--settle`), capped by `--timeout`. Pages that register tools later than that are missed. The popup waits at most 3 s (0.5 s quiet window).
-6. **Per-site allowlist limits.** The policy is keyed by origin only (not path or tab). Allowlisted tools are trusted by name, so if a site changes what a tool does, the allowlist still lets it run. MCP clients can't edit the policy.
+6. **Per-site allowlist limits.** The policy is keyed by origin only (not path or tab). Allowlisted tools are trusted by name, so if a site changes what a tool does, the allowlist still lets it run. MCP clients can't edit the policy. Checks run in the CLI and the MCP server, not in the native host, so `run_recipe` (which only calls `search_catalog`) and direct bridge-socket clients skip them; the host still audits those calls. Moving the checks into the host would close this.
 7. **Explain heuristics are rules, not understanding.** Every label says "from site hint" or "guessed", and every ability lists the exact tool names. Known misses:
    - Shopify marks `browse_store`, `get_product` and `show_variant` as not read-only, so Secret Menu guesses their labels from the names.
    - `get_ucp_profile` reads as "See your ucp profiles" (jargon).
@@ -43,4 +43,4 @@ Found in live tests with Chrome for Testing 156 and the WebMCP flag on. "Fixed i
 ## Decisions
 
 - **Pass site text through.** Page tool output, including a site's suggested next steps, is returned untouched apart from the 20,000-character cap. The agent's own approval UI is the check on actions that change data or spend money.
-- **Safety is opt-in.** The default is `{"guard": false, "audit": false}`. Per-site allowlist and strict entries are always enforced.
+- **Safety is opt-in.** The default is `{"guard": false, "audit": false}`. Per-site allowlist and strict entries apply to `secret-menu call` and MCP `call_page_tool` whether or not safety is on. They don't apply to `run_recipe` or to programs that talk to the bridge socket directly (see the README's safety limits).

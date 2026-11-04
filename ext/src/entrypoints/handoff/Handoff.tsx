@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronDown, Copy, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CopyLabel } from "@/components/copy-label";
 import { LabelPill } from "@/components/label-pill";
 import { PageShell, Switch } from "@/components/page-shell";
 import { explainTab, NO_WEBMCP } from "@/lib/abilities";
@@ -9,6 +10,7 @@ import { ConnectAgent } from "@/components/connect-agent";
 import { handoffGroups, handoffPrompt, isNoBridge, loadIndex, type IndexAbility } from "@/lib/site-data";
 import { shortTitle } from "@/lib/short-title";
 import type { Label } from "@/lib/abilities";
+import { countLabel } from "@/lib/plural";
 
 type Source = { host: string; abilities: IndexAbility[]; from: string };
 type State = { kind: "loading" } | { kind: "ready"; source: Source } | { kind: "empty"; message: string } | { kind: "connect" } | { kind: "error"; message: string };
@@ -23,7 +25,7 @@ async function loadSource(): Promise<State> {
     try {
       const r = await explainTab({ id: t.id!, url: t.url, title: t.title });
       if (!r.counts.tools) return { kind: "empty", message: `No WebMCP tools on ${bare(hostOf(t.url))} right now.` };
-      return { kind: "ready", source: { host: hostOf(r.url), abilities: r.abilities, from: `live tab, read just now (${r.counts.tools} tools)` } };
+      return { kind: "ready", source: { host: hostOf(r.url), abilities: r.abilities, from: `live tab, read just now (${countLabel(r.counts.tools, "tool")})` } };
     } catch (e) {
       const m = String((e as Error)?.message ?? e);
       return NO_WEBMCP.test(m) ? { kind: "empty", message: `No WebMCP on ${bare(hostOf(t.url))}.` } : { kind: "error", message: m };
@@ -35,7 +37,8 @@ async function loadSource(): Promise<State> {
     catch (e) { if (isNoBridge(String((e as Error)?.message ?? e))) return { kind: "connect" }; throw e; }
     const e = (entries as { indexKey?: string; abilities?: IndexAbility[]; verifiedAt?: string; counts?: { tools: number } }[]).find((x) => x.indexKey === site);
     if (!e) return { kind: "empty", message: `${site} isn't in your local index. Run secret-menu explain on it first.` };
-    return { kind: "ready", source: { host: hostOf(site), abilities: e.abilities ?? [], from: `local index, verified ${e.verifiedAt ? new Date(e.verifiedAt).toLocaleString() : "at an unknown time"} (${e.counts?.tools ?? "?"} tools)` } };
+    const tools = e.counts?.tools == null ? "? tools" : countLabel(e.counts.tools, "tool");
+    return { kind: "ready", source: { host: hostOf(site), abilities: e.abilities ?? [], from: `local index, verified ${e.verifiedAt ? new Date(e.verifiedAt).toLocaleString() : "at an unknown time"} (${tools})` } };
   }
   return { kind: "empty", message: "Open this from the popup (Hand off to an agent) or from Discover, so it knows which site to use." };
 }
@@ -52,7 +55,7 @@ export function Handoff() {
       {state.kind === "loading" && <div role="status" aria-label="Loading: reading the site's tools" data-state="loading" className="flex items-center gap-2 text-muted-foreground"><Loader2 className="size-4 animate-spin" aria-hidden="true" /> Reading the site's tools…</div>}
       {state.kind === "empty" && <div role="status" aria-label="Empty state: no tools to hand off" data-state="empty" className="text-sm">{state.message}</div>}
       {state.kind === "error" && <div role="status" aria-label="Error: couldn't read the site's tools" data-state="error" className="text-sm"><div className="font-semibold">Couldn't read the site's tools</div><div className="text-muted-foreground">{state.message}</div></div>}
-      {state.kind === "connect" && <div data-state="connect"><ConnectAgent why="This site comes from your local index, which lives with the Secret Menu bridge. It isn't set up yet." /></div>}
+      {state.kind === "connect" && <div data-state="connect"><ConnectAgent why="This site comes from your local index, which Secret Menu's helper on this computer keeps. It isn't set up yet." /></div>}
       {state.kind === "ready" && <Planner source={state.source} needsConnect={bridge === "missing"} />}
     </PageShell>
   );
@@ -68,6 +71,7 @@ function Planner({ source, needsConnect }: { source: Source; needsConnect: boole
   const copy = async () => { await navigator.clipboard.writeText(prompt); setCopied(true); setTimeout(() => setCopied(false), 1500); };
   return (
     <div className="grid gap-5 md:grid-cols-[1fr_1fr]" data-state="ready">
+      {needsConnect && <div className="md:col-span-2"><ConnectAgent compact /></div>}
       <section aria-label="Task and permissions" className="space-y-3">
         <label className="block text-sm font-medium" htmlFor="task">What should the agent do?</label>
         <textarea id="task" value={task} onChange={(e) => setTask(e.target.value)} rows={3} placeholder="e.g. find men's running shoes under $120 in size 10"
@@ -82,11 +86,11 @@ function Planner({ source, needsConnect }: { source: Source; needsConnect: boole
         <h2 className="text-sm font-medium">What "Copy agent prompt" copies</h2>
         <div className="rounded-lg border bg-code p-3 text-[13px] leading-relaxed" data-testid="handoff-prompt">{prompt}</div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" onClick={copy} aria-label="Copy agent prompt">{copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />} {copied ? "Copied" : "Copy agent prompt"}</Button>
+          <Button size="sm" onClick={copy} aria-label="Copy agent prompt"><CopyLabel copied={copied} label="Copy agent prompt" /></Button>
+          {needsConnect && <span className="text-xs text-muted-foreground" data-testid="works-after-setup">Works after setup</span>}
           {SHOW_RUN_IN_AGENT && <><Button size="sm" variant="outline" disabled aria-label="Run in agent (not built yet)" title="Not built yet: paste the prompt into your agent">Run in agent</Button><span className="text-xs text-muted-foreground">Run in agent isn't built yet. Paste the prompt into an agent that has Secret Menu connected.</span></>}
         </div>
       </section>
-      {needsConnect && <div className="md:col-span-2"><ConnectAgent why="Your agent calls these tools through Secret Menu, so it needs a one-time setup on this computer before the prompt will work." /></div>}
       <section className="grid gap-3 md:col-span-2 md:grid-cols-3" aria-label="What the agent may call">
         <PlanColumn title="Runs without asking" items={plan.run} testid="plan-run" />
         <PlanColumn title="Asks you first" items={plan.ask} testid="plan-ask" />

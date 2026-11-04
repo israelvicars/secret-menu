@@ -78,9 +78,9 @@ Effective theme in the AX tree: `#sm-theme-status` (sr-only, `role=status`) is n
   rows `[data-testid=site-row]` with `Open`, `Hand off`, `Copy agent prompt`; footer `[data-testid=discover-footer]`.
   Empty states: `[data-testid=empty-index|empty-search|empty-category]`; error text `Error: local index unavailable`.
 - No native host (before `npx secret-menu setup`): not an error. Discover renders `[data-state=connect]` with
-  `[data-testid=connect-agent]` (`role=status`, named `Connect your agent`, a `Copy setup command` button) instead of the
-  error; `Error: local index unavailable` is only for a bridge that is installed but fails. Hand-off `?site=` renders the same
-  connect state; hand-off `?tab=` still works and adds `[data-testid=connect-agent]` above the plan lists. The popup is unchanged.
+  `[data-testid=connect-agent]` (`role=status`, named `Connect your agent`, `Copy setup command` and `Copy MCP command` buttons) instead of the
+  error; `Error: local index unavailable` is only for a helper that is installed but fails. Hand-off `?site=` renders the same
+  connect state; hand-off `?tab=` still works and adds a compact `[data-testid=connect-agent][data-compact=true]` notice above the form with a `Show steps` toggle (`aria-expanded`), plus `[data-testid=works-after-setup]` next to `Copy agent prompt`. The popup is unchanged.
   The service worker logs nothing while the host is missing (it retries quietly, up to every 30s).
 
 ## In-page badge

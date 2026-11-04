@@ -125,6 +125,13 @@ test("example commands quote placeholders and use schema examples", () => {
   assert.equal(exampleCommand(classifyTool(tool), tool, { tabId: 3 }), "secret-menu call add_item --tab 3 --arg item=tea --arg qty=1 --arg 'note=<note>'");
 });
 
+test("example commands use the installed package command", () => {
+  const tool = T("search_numbers", "Search numbers.", {}, obj({ keyword: { type: "string" } }, ["keyword"]));
+  const classified = classifyTool(tool);
+  assert.match(exampleCommand(classified, tool, { cli: "/tmp/node_modules/secret-menu/bin/secret-menu" }), /^secret-menu call/);
+  assert.match(exampleCommand(classified, tool, { cli: "/tmp/_npx/abc/node_modules/secret-menu/bin/secret-menu" }), /^npx secret-menu call/);
+});
+
 test("example commands build useful JSON for object and array params", () => {
   const tool = T("show_variant", "", {}, obj({
     catalog: { type: "object", properties: { id: { type: "string" }, locale: { type: "string" } }, required: ["id"] },

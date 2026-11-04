@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Copy, ExternalLink, Loader2, Search, Send, X } from "lucide-react";
+import { ExternalLink, Loader2, Search, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CopyLabel } from "@/components/copy-label";
 import { LabelPill } from "@/components/label-pill";
 import { PageShell } from "@/components/page-shell";
 import { SiteIcon } from "@/components/site-icon";
@@ -8,6 +9,7 @@ import { ConnectAgent } from "@/components/connect-agent";
 import { countPills } from "@/lib/count-pills";
 import { CATEGORIES, directory, handoffPrompt, isNoBridge, loadIndex, recommend, searchCards, showRecommended, type SiteCard } from "@/lib/site-data";
 import { cn } from "@/lib/utils";
+import { countLabel } from "@/lib/plural";
 
 type State = { kind: "loading" } | { kind: "ready"; entries: unknown[] } | { kind: "connect" } | { kind: "error"; message: string };
 const ALL = "All";
@@ -21,11 +23,11 @@ export function Discover() {
   return (
     <PageShell title="Discover sites with WebMCP" subtitle="Sites in your local index: ones Secret Menu has explained on this computer. Nothing here comes from a remote directory.">
       {state.kind === "loading" && <div role="status" aria-label="Loading: reading your local index" data-state="loading" className="flex items-center gap-2 text-muted-foreground"><Loader2 className="size-4 animate-spin" aria-hidden="true" /> Reading your local index…</div>}
-      {state.kind === "connect" && <div data-state="connect"><ConnectAgent why="Discover lists the sites Secret Menu has explained on this computer. That local index lives with the Secret Menu bridge, which isn't set up yet. The popup works without it." /></div>}
+      {state.kind === "connect" && <div data-state="connect"><ConnectAgent why="Discover lists the sites Secret Menu has explained on this computer. That list is kept by Secret Menu's helper on this computer, which isn't set up yet. The popup works without it." /></div>}
       {state.kind === "error" && (
         <div role="status" aria-label="Error: local index unavailable" data-state="error" className="space-y-1 text-sm">
           <div className="font-semibold">Can't read your local index</div>
-          <div className="text-muted-foreground">The index lives with the Secret Menu bridge, which isn't connected ({state.message}). Run <code className="font-mono">npx secret-menu doctor</code> to see what's wrong, then reopen this page.</div>
+          <div className="text-muted-foreground">The index is kept by Secret Menu's helper on this computer, which isn't responding ({state.message}). Run <code className="font-mono">npx secret-menu doctor</code> to see what's wrong, then reopen this page.</div>
         </div>
       )}
       {state.kind === "ready" && <Directory entries={state.entries} query={query} setQuery={setQuery} chip={chip} setChip={setChip} />}
@@ -92,13 +94,14 @@ function SiteRow({ c }: { c: SiteCard }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => { await navigator.clipboard.writeText(handoffPrompt({ host: c.host, abilities: c.abilities })); setCopied(true); setTimeout(() => setCopied(false), 1500); };
   const n = c.counts;
+  const tools = n?.tools == null ? "? tools" : countLabel(n.tools, "tool");
   return (
-    <li className="flex items-center gap-3 py-2.5" aria-label={`Site: ${c.name}, ${n?.tools ?? 0} tools`} data-testid="site-row">
+    <li className="flex items-center gap-3 py-2.5" aria-label={`Site: ${c.name}, ${tools}`} data-testid="site-row">
       <SiteIcon host={c.host} size="sm" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="font-semibold">{c.name}</span>
-          <span className="text-xs text-muted-foreground">{c.host.replace(/^www\./, "")} · {n?.tools ?? "?"} tools</span>
+          <span className="text-xs text-muted-foreground">{c.host.replace(/^www\./, "")} · {tools}</span>
           {c.local && <span className="rounded bg-muted px-1 text-[10px] text-muted-foreground">test page</span>}
         </div>
         <div className="truncate text-xs text-muted-foreground">{c.oneLiner}</div>
@@ -111,7 +114,7 @@ function SiteRow({ c }: { c: SiteCard }) {
       <div className="flex flex-none gap-1.5">
         <Button size="xs" variant="outline" aria-label={`Open ${c.name}`} onClick={() => chrome.tabs.create({ url: c.site })}><ExternalLink aria-hidden="true" /> Open</Button>
         <Button size="xs" variant="outline" aria-label={`Hand off ${c.name}`} onClick={() => chrome.tabs.create({ url: chrome.runtime.getURL(`/handoff.html?site=${encodeURIComponent(c.site)}` as any) })}><Send aria-hidden="true" /> Hand off</Button>
-        <Button size="xs" variant="ghost" aria-label={`Copy agent prompt for ${c.name}`} onClick={copy}>{copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />} {copied ? "Copied" : "Copy agent prompt"}</Button>
+        <Button size="xs" variant="ghost" aria-label={`Copy agent prompt for ${c.name}`} onClick={copy}><CopyLabel copied={copied} label="Copy agent prompt" /></Button>
       </div>
     </li>
   );

@@ -27,8 +27,8 @@ npx secret-menu setup
 
 This installs Chrome's native messaging host for Secret Menu (`com.secretmenu.bridge`) and a small launcher under
 `~/.secret-menu`. It's safe to run again; it says what it wrote or left unchanged. If you load the extension
-unpacked under a different ID, pass it: `npx secret-menu setup --extension-id <32-letter id>` (or set
-`SECRET_MENU_EXTENSION_ID`).
+unpacked under a different ID, pass it: `npx secret-menu setup --extension-id <32-letter id>` (repeat the flag for more IDs, or use comma-separated values), or set
+`SECRET_MENU_EXTENSION_ID`.
 
 Then reload the extension (or restart Chrome).
 

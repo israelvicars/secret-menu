@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Check, ChevronRight, Compass, Copy, RefreshCw, Send } from "lucide-react";
+import { ChevronRight, Compass, RefreshCw, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CopyLabel } from "@/components/copy-label";
 import { Mark } from "@/components/mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LabelFrom, LabelPill } from "@/components/label-pill";
@@ -12,6 +13,7 @@ import { shortTitle } from "@/lib/short-title";
 import { countPills } from "@/lib/count-pills";
 import { explainError } from "@/lib/error-copy";
 import { hasMoreBelow } from "@/lib/scroll-cue";
+import { countLabel } from "@/lib/plural";
 import { ABILITIES_PAGE_TITLE, detailsId, MAIN_ID, MAIN_STATE_ID, PAGE_MAIN_LABEL, POPUP_MAIN_LABEL, stateName } from "@/lib/test-hooks";
 
 type State =
@@ -156,7 +158,7 @@ function Abilities({ report, favIconUrl, onRecheck }: { report: ExplainReport; f
         <SiteIcon host={host} src={favIconUrl} />
         <div className="min-w-0 flex-1">
           <h1 className="text-sm font-semibold leading-tight">What more can I do here?</h1>
-          <div className="truncate text-xs text-muted-foreground" data-testid="site-summary">{bare(host)} · {c.tools} WebMCP tool{c.tools === 1 ? "" : "s"}</div>
+          <div className="truncate text-xs text-muted-foreground" data-testid="site-summary">{bare(host)} · {countLabel(c.tools, "WebMCP tool")}</div>
         </div>
         <RecheckButton onClick={onRecheck} className="-mr-1.5" />
       </header>
@@ -231,7 +233,7 @@ function AbilityRow({ ab, index, onToggle }: { ab: Ability; index: number; onTog
           )}
           <div className="min-w-0 max-w-full whitespace-pre-wrap rounded-md border bg-code p-2 text-[11.5px] leading-snug [overflow-wrap:anywhere]" data-testid="agent-prompt">{ab.example.prompt}</div>
           <Button size="xs" variant="outline" onClick={copy} className="h-6 gap-1 px-2 text-[11px]" aria-label={`Copy agent prompt for ${ab.title}`}>
-            {copied ? <Check className="size-3" aria-hidden="true" /> : <Copy className="size-3" aria-hidden="true" />} {copied ? "Copied" : "Copy agent prompt"}
+            <CopyLabel copied={copied} label="Copy agent prompt" iconClassName="size-3" />
           </Button>
         </div>
       )}

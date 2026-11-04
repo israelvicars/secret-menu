@@ -24,15 +24,16 @@ Some websites now publish tools for AI agents through WebMCP (`document.modelCon
   </tr>
 </table>
 
-<sub>The badge and popup on Secret Menu's built-in test page (<code>secret-menu serve</code>), a fake shop with 14 tools. Nothing on it is real.</sub>
+<sub>The badge and popup on Secret Menu's built-in test shop: run <code>npx secret-menu serve</code> and open <code>http://127.0.0.1:8765/explain.html</code>, a fake shop with 14 tools. (The plain test page at <code>/</code> has 3.) Nothing on it is real.</sub>
 
 > [!IMPORTANT]
 > **WebMCP is still experimental, and so is this project.**
 >
-> - **Stock Chrome barely shows these tools yet.** Without a flag, Chrome only exposes WebMCP tools on sites taking part in the WebMCP origin trial (Chrome 149 to 162, ending March 30, 2027). There is no ship date for WebMCP in stable Chrome yet.
-> - **Most testing ran with the WebMCP flag on.** `secret-menu launch` starts its own Chrome with `--enable-features=WebMCP`. In one check without the flag, the test browser (Chrome for Testing 156) still showed tools on three sample stores. Stock Chrome without the flag hasn't been checked.
-> - **macOS and Linux only.** `npx secret-menu setup` works with Google Chrome on macOS and Linux. The dedicated test Chrome (`secret-menu launch`, for development) needs an Apple Silicon Mac. Windows isn't supported yet.
+> - **Stable Chrome needs a flag.** Turn on `chrome://flags/#enable-webmcp-testing` and restart Chrome. Without it, Chrome only exposes WebMCP tools on sites taking part in the WebMCP origin trial (Chrome 149 to 162, ending March 30, 2027). In a check on stable Chrome 157 with the flag off, pages showed no tools. There is no ship date for WebMCP in stable Chrome yet.
+> - **Most testing ran with the WebMCP flag on.** `secret-menu launch` starts its own Chrome with `--enable-features=WebMCP`.
+> - **macOS and Linux only.** `npx secret-menu setup` works with Google Chrome, Chrome Beta, Dev and Canary (macOS) and Chromium on macOS and Linux. The dedicated test Chrome (`secret-menu launch`, for development) needs an Apple Silicon Mac. Windows isn't supported yet.
 > - **Safety controls are opt-in.** By default calls run, and your agent's own approval prompt is the check. See [Safety model](#safety-model).
+> - **Chrome Web Store: coming soon.** Until the listing is live, load the extension unpacked (see Install).
 
 ## What it does
 
@@ -40,14 +41,14 @@ Some websites now publish tools for AI agents through WebMCP (`document.modelCon
 - **Call tools from the command line.** List, inspect and call a page's tools in a dedicated Chrome session, and watch tools appear and disappear as pages change.
 - **Give an agent the tools.** `secret-menu mcp` is a stdio MCP server, so any MCP client (Codex, Claude, Cursor and others) can find sites, open them, read their tools and call them as the signed-in user.
 - **See them while browsing.** The Chrome extension shows a small badge on pages that have tools and a toolbar popup listing what the page can do.
-- **Learn from use.** Each site you explain is saved to a local index on your machine. There is no crawler and no server.
+- **Learn from use.** Each site you or your agent explains (`secret-menu explain`, MCP `explain_page` or `open_site`) is saved to a local index on your machine. There is no crawler and no server.
 
 ## Requirements
 
 - Node.js 22 or newer
-- Google Chrome on macOS or Linux (Windows isn't supported yet)
-- The Secret Menu extension in Chrome. A Chrome Web Store listing is coming; until then, load it unpacked (see below).
-- Sites that publish WebMCP tools. In stable Chrome that's only sites in the WebMCP origin trial, unless WebMCP is turned on (see the note above).
+- Google Chrome (or Chrome Beta, Dev, Canary on macOS, or Chromium) on macOS or Linux. Windows isn't supported yet.
+- The Secret Menu extension in Chrome. The Chrome Web Store listing is coming soon; until then, load it unpacked (see below).
+- Sites that publish WebMCP tools. In stable Chrome that's only sites in the WebMCP origin trial, unless you turn on `chrome://flags/#enable-webmcp-testing` (see the note above).
 
 ## Install
 
@@ -55,7 +56,7 @@ There are two parts. The **extension** shows you a page's tools while you browse
 
 ### 1. The extension
 
-The Chrome Web Store listing is coming. Until then, build it from this repo and load it unpacked:
+The Chrome Web Store listing is coming soon. Until then, build it from this repo and load it unpacked:
 
 ```sh
 git clone https://github.com/israelvicars/secret-menu.git
@@ -74,7 +75,9 @@ npx secret-menu setup
 
 This installs Chrome's native messaging host for Secret Menu (`com.secretmenu.bridge`) and a small launcher under `~/.secret-menu`. It's safe to run again; it says what it wrote or left unchanged. If your extension has a different ID, pass it: `npx secret-menu setup --extension-id <32-letter id>` (or set `SECRET_MENU_EXTENSION_ID`).
 
-Then reload the extension (or restart Chrome).
+Setup finds which Chrome-family browsers you have and installs into each one (Google Chrome if it finds none), and prints the browser and folder it wrote to. To pick one, pass `--browser chrome`, `chrome-beta`, `chrome-dev`, `chrome-canary` (macOS only), `chromium` or `all`. You can repeat it or separate names with commas. `doctor` and `uninstall` take the same flag.
+
+Then reload the extension (or restart Chrome). On stable Chrome, also turn on `chrome://flags/#enable-webmcp-testing` unless you only use origin-trial sites.
 
 ### 3. Connect your agent
 
@@ -106,7 +109,7 @@ Each line is `ok` or `FAIL` with a fix: Node version, the native host manifest, 
 
 ### Developing from a clone: the dedicated test Chrome
 
-From a source checkout you can also run Secret Menu in its own Chrome for Testing (Apple Silicon Mac only), with the WebMCP flag on and its own profile, never your everyday Chrome. `launch` and `serve` only work from a clone, not from the npm package.
+From a source checkout you can also run Secret Menu in its own Chrome for Testing (Apple Silicon Mac only), with the WebMCP flag on and its own profile, never your everyday Chrome. `launch` only works from a clone; `serve` also works from the npm package (`npx secret-menu serve`).
 
 ```sh
 npx @puppeteer/browsers install chrome@156 --path "$HOME/.secret-menu/browsers"
@@ -117,8 +120,10 @@ npx @puppeteer/browsers install chrome@156 --path "$HOME/.secret-menu/browsers"
 ### Try it on the test page
 
 ```sh
-./bin/secret-menu serve                           # test page on http://127.0.0.1:8765/
+./bin/secret-menu serve                           # test page on http://127.0.0.1:8765/ (busy port? add --port 8766)
 ```
+
+The 14-tool test shop is at `http://127.0.0.1:8765/explain.html`.
 
 In a second terminal:
 
@@ -183,8 +188,8 @@ The extension lives in `ext/` (WXT, React, Tailwind and shadcn/ui on Base UI). I
 | `allow`, `disallow`, `sites` | Edit the per-site allowlist |
 | `approvals`, `approve <id>`, `deny <id>` | Handle pending MCP approvals (when safety is on) |
 | `log [--n 20] [--redact]`, `verify` | Read the audit log and check its hash chain |
-| `setup [--extension-id ID]`, `doctor`, `uninstall` | Install, check and remove the native messaging host for your Chrome |
-| `serve` | Serve the test fixture on `http://127.0.0.1:8765/` (from a clone) |
+| `setup [--browser NAME] [--extension-id ID]`, `doctor [--browser NAME]`, `uninstall [--browser NAME]` | Install, check and remove the native messaging host for your Chrome-family browsers |
+| `serve [--port N]` | Serve the test pages on `http://127.0.0.1:8765/` (the 14-tool shop is `/explain.html`) |
 
 Run `npx secret-menu --help` (or `./bin/secret-menu --help` in a clone) for the full list. Use `--wait-tools` (with `--settle MS` and `--timeout MS`) on pages that register tools a few seconds after loading.
 
@@ -209,6 +214,10 @@ Secret Menu builds roads; it doesn't police them. The checks below run in the co
   - The audit anchor (`audit.jsonl.head`) sits next to the log, so someone who can edit both can still hide a truncated log.
   - Allowlisted tools are trusted by name. If a site later changes what a tool does, the allowlist still lets it run.
   - The local data folder holds your signed-in Chrome profile, and tool arguments appear in the audit log. Use `secret-menu log --redact` before sharing log lines.
+
+## Privacy
+
+Secret Menu has no servers, accounts, analytics or telemetry. What it saves stays on your computer, and page tools only reach an agent you connect yourself. See [PRIVACY.md](PRIVACY.md).
 
 ## Configuration
 
@@ -243,7 +252,7 @@ Optional, for desktop UI tests only (never needed to run Secret Menu): [agent-de
 npx secret-menu uninstall
 ```
 
-This removes only what setup wrote (the native host manifest, if it still points at Secret Menu, and the launcher). Your data in `~/.secret-menu` stays; delete that folder to remove it. Then remove the extension from Chrome. If you used the test Chrome from a clone, run `./bin/secret-menu stop` first.
+This removes only what setup wrote (the native host manifest in each browser setup used, if it still points at Secret Menu, and the launcher). Your data in `~/.secret-menu` stays; delete that folder to remove it. Then remove the extension from Chrome. If you used the test Chrome from a clone, run `./bin/secret-menu stop` first.
 
 ## Credits
 

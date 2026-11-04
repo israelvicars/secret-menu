@@ -24,3 +24,14 @@ test("package names, bins and host name use Secret Menu; the extension id is unc
   assert.match(readFileSync(new URL("../ext/src/bridge/background.js", import.meta.url), "utf8"), /const HOST = "com\.secretmenu\.bridge";/);
   assert.match(execFileSync(process.execPath, ["-e", 'import("./host/paths.mjs").then((p) => console.log(p.HOST_NAME))'], { cwd, encoding: "utf8" }), /^com\.secretmenu\.bridge/);
 });
+
+test("the npm package includes every fixture served by secret-menu serve", () => {
+  const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+  assert.ok(pkg.files.includes("test/fixtures/"));
+  const cache = mkdtempSync(join(tmpdir(), "secret-menu-npm-cache-"));
+  let packed;
+  try { packed = JSON.parse(execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd, encoding: "utf8", env: { ...process.env, npm_config_cache: cache } })); }
+  finally { rmSync(cache, { recursive: true, force: true }); }
+  const files = new Set(packed[0].files.map((file) => file.path));
+  for (const name of ["test/fixtures/churn.html", "test/fixtures/explain.html", "test/fixtures/explain-tools.js"]) assert.ok(files.has(name), name);
+});

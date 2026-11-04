@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ext/package-lock.json
+      # The root package has no dependencies and no lockfile. The unit tests import
+      # shared extension code, so install the extension's locked dependencies.
+      - run: npm ci --prefix ext --no-audit --no-fund
+      # Unit tests only (test/*.test.mjs). No browser is launched.
+      - run: npm test

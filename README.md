@@ -3,6 +3,7 @@
 **See the WebMCP tools a website offers, and let your agent use them as you.**
 
 [![npm](https://img.shields.io/npm/v/secret-menu)](https://www.npmjs.com/package/secret-menu)
+[![CI](https://github.com/israelvicars/secret-menu/actions/workflows/ci.yml/badge.svg)](https://github.com/israelvicars/secret-menu/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 <p align="center">
@@ -12,7 +13,7 @@
   </picture>
 </p>
 
-<p align="center"><sub>The popup on Secret Menu's built-in test shop (<code>npx secret-menu serve</code>, then open <code>/explain.html</code>). The shop and its 14 tools are fake.</sub></p>
+<p align="center"><sub>The popup on Secret Menu's built-in test shop (<code>./bin/secret-menu serve</code> in a clone, then open <code>/explain.html</code>). The shop and its 14 tools are fake.</sub></p>
 
 > [!NOTE]
 > An early side project, and experimental like WebMCP itself. It needs Chrome's WebMCP flag (or a site in Google's trial), on macOS or Linux. [Details](#requirements)
@@ -35,7 +36,8 @@
    ```
 
    Open `chrome://extensions`, turn on **Developer mode**, choose **Load unpacked** and pick `ext/.output/chrome-mv3`.
-3. Run `npx secret-menu serve` and open `http://127.0.0.1:8765/explain.html`. (Port busy? Add `--port 8766`.)
+3. In the same `secret-menu` folder, run `./bin/secret-menu serve` and open `http://127.0.0.1:8765/explain.html`. (Port busy? Add `--port 8766`.)
+   <!-- Back to `npx secret-menu serve` once secret-menu@0.1.1 is on npm (0.1.0 has no serve). -->
 4. Click the 🗝️ in your toolbar (pin it from the puzzle-piece menu), or the badge on the page. You should see 14 tools in six abilities.
 
 The extension works on its own. To let an agent use the tools too, connect it:

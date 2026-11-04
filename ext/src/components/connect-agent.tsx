@@ -23,13 +23,13 @@ export function ConnectAgent({ why, compact = false }: { why?: string; compact?:
         <div className="flex items-center gap-2 font-semibold"><Plug className="size-4" aria-hidden="true" /> Connect your agent</div>
       )}
       {!compact && <p className="text-muted-foreground">{why}</p>}
-      {(!compact || expanded) && <ol id={compact ? stepsId : undefined} className="list-decimal space-y-1.5 pl-5 text-muted-foreground">
+      {(!compact || expanded) && <ol id={compact ? stepsId : undefined} className={compact ? "mt-2.5 list-decimal space-y-1.5 pl-5 text-muted-foreground" : "list-decimal space-y-1.5 pl-5 text-muted-foreground"}>
         <li>
           <div>In a terminal, run:</div>
           <CommandRow command={SETUP_COMMAND} label="Copy setup command" />
         </li>
         <li>
-          <div>Paste the config that setup prints into your agent's MCP settings (for example Claude Desktop → Settings → Developer → Edit Config, or Cursor → Settings → MCP). Its command is:</div>
+          <div>Paste the config that setup prints into your agent's MCP settings (for example Claude Desktop → Settings → Developer → Edit Config, or Cursor → Settings → MCP). If it asks for a command, use:</div>
           <CommandRow command={MCP_COMMAND} label="Copy MCP command" />
         </li>
         <li>Reopen this page.</li>

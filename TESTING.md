@@ -44,11 +44,12 @@ Name checks (no Chrome): `test/cli-names.test.mjs` covers `secret-menu --help`, 
 
 ## Popup
 
-- Root `main#sm-main[data-state]`: `loading`, `ready`, `empty-not-web`, `empty-no-webmcp`, `empty-no-tools`, `error`.
+- Root `main#sm-main[data-state]`: `loading`, `ready`, `empty-not-web`, `empty-insecure`, `empty-no-webmcp`, `empty-no-tools`, `error`.
   Accessible name `Secret Menu popup` (as a tab: `Secret Menu abilities page`); its description (`aria-describedby=sm-main-state`,
   an sr-only span) reads `State: <state>`, so the AX tree shows the state without DOM access.
 - Loading: `role=status`, aria-label `Loading: reading this page's WebMCP tools`, `data-state=loading`. It is a skeleton with the ready layout (header, count row, 6 rows, read line), invisible for the first 150 ms and then shown; there is no fixed min-height.
 - Empty states have aria-labels starting `Empty state:`; the error state has aria-label `Error: couldn't read this page`. Error details are in a collapsed native `<details>` under `summary` `Details`, with the raw message in `[data-testid=error-detail]`.
+- The insecure empty state has aria-label `Empty state: page isn't secure` and no buttons. The three reasoned empty states use `[data-testid=flag-hint][data-reason]`; the WebMCP flag state has aria-label `Empty state: WebMCP is probably off`, `data-reason=no-webmcp`, an `open-webmcp-flag` button, and `webmcp-flag-note`. If opening the flag page fails, it shows `copy-webmcp-flag`, `copy-webmcp-flag-note`, and the flag address. The no-tools state has aria-label `Empty state: no WebMCP tools on this page`, `data-reason=no-tools`, and `discover-with-tools`. To force the copy-address fallback in CDP tests, override `chrome.tabs.create` in the popup page to reject before clicking `open-webmcp-flag`.
 - Ready reports include a single-line, non-wrapping `aria-label="Tool counts by label"` row of non-zero count pills below the site summary.
 - Each ability is `li[data-testid=ability-row][data-label=<label>]` with aria-label `Ability: <title>, <label>`.
 - Its expand button has `aria-expanded` and `aria-controls`, plus aria-label `Show details for <title>` (or `Hide details for <title>` when it's open).

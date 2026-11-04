@@ -102,7 +102,7 @@ export function startContent() {
 
   async function handle(msg) {
     const modelContext = document.modelContext;
-    if (!modelContext) return { error: "WebMCP is not available on this page (document.modelContext is missing)." };
+    if (!modelContext) return { error: "WebMCP is not available on this page (document.modelContext is missing).", secureContext: window.isSecureContext, modelContext: false };
     if (msg.action === "LIST_TOOLS") {
       return { url: location.href, title: document.title, page: pageContext(), tools: (await ownTools(modelContext)).map(plainTool) };
     }

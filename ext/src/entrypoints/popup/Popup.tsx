@@ -15,11 +15,12 @@ import { explainError } from "@/lib/error-copy";
 import { hasMoreBelow } from "@/lib/scroll-cue";
 import { countLabel } from "@/lib/plural";
 import { ABILITIES_PAGE_TITLE, detailsId, MAIN_ID, MAIN_STATE_ID, PAGE_MAIN_LABEL, POPUP_MAIN_LABEL, stateName } from "@/lib/test-hooks";
+import { noToolsReason, openWebmcpFlag, WEBMCP_FLAG_URL, type NoToolsReason } from "@/lib/webmcp-state";
 
 type State =
   | { kind: "loading" }
   | { kind: "ready"; report: ExplainReport }
-  | { kind: "empty"; host: string; reason: "no-webmcp" | "no-tools" | "not-web" }
+  | { kind: "empty"; host: string; reason: "not-web" | NoToolsReason }
   | { kind: "error"; message: string };
 
 // Toolbar popup: the active tab. Opened as a page (badge fallback, screenshots, tests): ?tab=<id>.
@@ -72,7 +73,10 @@ export function Popup() {
       setState(report.counts.tools ? { kind: "ready", report } : { kind: "empty", host: hostOf(report.url), reason: "no-tools" });
     } catch (error) {
       const message = String((error as Error)?.message ?? error);
-      setState(NO_WEBMCP.test(message) ? { kind: "empty", host: hostOf(t.url), reason: "no-webmcp" } : { kind: "error", message });
+      if (NO_WEBMCP.test(message)) {
+        const webmcp = (error as Error & { webmcp?: { secureContext?: boolean; modelContext?: boolean } }).webmcp;
+        setState({ kind: "empty", host: hostOf(t.url), reason: noToolsReason({ ...webmcp, url: t.url }) ?? "no-webmcp" });
+      } else setState({ kind: "error", message });
     }
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -87,7 +91,7 @@ export function Popup() {
         <div ref={contentRef}>
           {state.kind === "loading" && <LoadingSkeleton hidden={!showLoading} />}
           {state.kind === "ready" && <Abilities report={state.report} favIconUrl={tab?.favIconUrl} onRecheck={load} />}
-          {state.kind === "empty" && <Empty state={state} favIconUrl={tab?.favIconUrl} onRecheck={state.reason === "not-web" ? undefined : load} />}
+          {state.kind === "empty" && <Empty state={state} favIconUrl={tab?.favIconUrl} onRecheck={state.reason === "not-web" || state.reason === "insecure" ? undefined : load} onDiscover={() => open("/discover.html")} />}
           {state.kind === "error" && (
             <div role="status" aria-label="Error: couldn't read this page" data-state="error" className="flex items-start gap-2.5 py-4">
               {/* #22: same fixed mark as the empty states. */}
@@ -243,20 +247,40 @@ function AbilityRow({ ab, index, onToggle }: { ab: Ability; index: number; onTog
 
 const EMPTY = {
   "not-web": ["Not a web page", "Open a website to see what its WebMCP tools let you and your agent do.", "Empty state: not a web page"],
-  "no-webmcp": ["No WebMCP here", "This page doesn't offer WebMCP tools. Most sites don't yet.", "Empty state: no WebMCP on this page"],
-  "no-tools": ["No WebMCP tools on this page", "Checked for 3 seconds. The site may add tools after you sign in or open another page.", "Empty state: no WebMCP tools on this page"],
+  insecure: ["This page isn't secure", "WebMCP only works on https pages (and localhost). This page uses plain http, so Chrome doesn't offer page tools here.", "Empty state: page isn't secure"],
+  "no-webmcp": ["WebMCP is probably off in this Chrome", "Chrome only offers WebMCP when its test flag is on, or on sites in Google's trial. We didn't find it on this page, so the flag is most likely off.", "Empty state: WebMCP is probably off"],
+  "no-tools": ["This site has no WebMCP tools yet", "WebMCP is on in your Chrome, but this page hasn't added any tools. Most sites haven't yet.", "Empty state: no WebMCP tools on this page"],
 } as const;
 
-function Empty({ state, favIconUrl, onRecheck }: { state: Extract<State, { kind: "empty" }>; favIconUrl?: string; onRecheck?: () => void }) {
+function Empty({ state, favIconUrl, onRecheck, onDiscover }: { state: Extract<State, { kind: "empty" }>; favIconUrl?: string; onRecheck?: () => void; onDiscover: () => void }) {
   const [title, body, label] = EMPTY[state.reason];
+  const [flagFailed, setFlagFailed] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const copyFlag = async () => { await navigator.clipboard.writeText(WEBMCP_FLAG_URL); setCopied(true); setTimeout(() => setCopied(false), 1500); };
+  const turnOnFlag = async () => {
+    const result = await openWebmcpFlag((props) => chrome.tabs.create(props));
+    if (result === "opened") { if (!new URLSearchParams(location.search).has("view")) window.close(); }
+    else setFlagFailed(true);
+  };
   return (
     <div role="status" aria-label={label} data-state={`empty-${state.reason}`} className="flex items-start gap-2.5 py-4">
       <SiteIcon host={state.host} src={state.host ? favIconUrl : undefined} />
       <div className="min-w-0 flex-1">
         <div className="font-semibold">{title}</div>
         {state.host && <div className="truncate text-xs text-muted-foreground">{bare(state.host)}</div>}
-        <p className="mt-1.5 text-xs leading-snug text-muted-foreground">{body}</p>
-        {state.reason === "no-webmcp" && <details className="mt-1.5 text-[10.5px] text-muted-foreground"><summary className="cursor-pointer">Details</summary><div className="mt-1 font-mono">document.modelContext isn't available on this page.</div></details>}
+        {state.reason === "not-web" ? <p className="mt-1.5 text-xs leading-snug text-muted-foreground">{body}</p> : (
+          <div data-testid="flag-hint" data-reason={state.reason}>
+            <p className="mt-1.5 text-xs leading-snug text-muted-foreground">{body}</p>
+            {state.reason === "no-webmcp" && <div className="mt-1.5">
+              <Button size="xs" variant="outline" onClick={turnOnFlag} data-testid="open-webmcp-flag" className="h-6 px-2 text-[11px]">Turn on WebMCP in Chrome</Button>
+              {!flagFailed ? <div className="mt-1 text-[10.5px] text-muted-foreground" data-testid="webmcp-flag-note">Set it to Enabled, then relaunch Chrome.</div> : <>
+                <div className="mt-1 flex items-center gap-2"><Button size="xs" variant="outline" onClick={copyFlag} data-testid="copy-webmcp-flag" className="h-6 px-2 text-[11px]"><CopyLabel copied={copied} label="Copy address" iconClassName="size-3" /></Button><span className="text-[10.5px] text-muted-foreground" data-testid="copy-webmcp-flag-note">Paste it into the address bar.</span></div>
+                <code className="mt-1 block break-all font-mono text-[10.5px] text-muted-foreground">{WEBMCP_FLAG_URL}</code>
+              </>}
+            </div>}
+            {state.reason === "no-tools" && <Button size="xs" variant="link" onClick={onDiscover} data-testid="discover-with-tools" className="mt-1 h-auto px-0 py-0.5 text-[11px] underline">Discover sites with tools</Button>}
+          </div>
+        )}
         {onRecheck && <RecheckButton onClick={onRecheck} className="mt-1 -ml-1.5" />}
       </div>
     </div>

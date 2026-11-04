@@ -202,7 +202,11 @@ async function handle(method, params) {
   const { tab, fallback } = await resolveTab(params.tabId);
   if (method === "list_page_tools") {
     const value = await toContent(tab.id, { action: "LIST_TOOLS" });
-    if (value.error) throw new Error(value.error);
+    if (value.error) {
+      const error = new Error(value.error);
+      if (value.modelContext === false) error.webmcp = { secureContext: value.secureContext, modelContext: false };
+      throw error;
+    }
     lastTools = new Map(lastTools).set(tab.id, value.tools ?? []);
     return tabResult(tab, fallback, value);
   }

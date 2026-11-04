@@ -16,7 +16,11 @@ export function createPopupListener(handle, { extensionId } = {}) {
     }
     Promise.resolve()
       .then(() => handle(msg.method, msg.params ?? {}))
-      .then((result) => reply({ result }), (error) => reply({ error: String(error?.message ?? error) }));
+      .then((result) => reply({ result }), (error) => {
+        const response = { error: String(error?.message ?? error) };
+        if (error?.webmcp) response.webmcp = error.webmcp;
+        reply(response);
+      });
     return true;
   };
 }

@@ -25,7 +25,11 @@ type ListResult = { tabId: number; url: string; title?: string; page?: unknown; 
 async function listPageTools(tabId: number): Promise<ListResult> {
   const reply = await chrome.runtime.sendMessage({ target: POPUP_TARGET, method: "list_page_tools", params: { tabId } });
   if (!reply) throw new Error("The extension's background worker did not answer.");
-  if (reply.error) throw new Error(reply.error);
+  if (reply.error) {
+    const error = new Error(reply.error) as Error & { webmcp?: unknown };
+    if (reply.webmcp) error.webmcp = reply.webmcp;
+    throw error;
+  }
   return reply.result;
 }
 

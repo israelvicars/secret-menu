@@ -34,6 +34,16 @@ test("popup listener reports handle() errors as text", async () => {
   assert.deepEqual(await call(listener, { target: POPUP_TARGET, method: "list_page_tools", params: { tabId: 1 } }), { error: "WebMCP is not available on this page" });
 });
 
+test("popup listener passes WebMCP error metadata through when present", async () => {
+  const listener = createPopupListener(async () => { const error = new Error("WebMCP is not available"); error.webmcp = { secureContext: false, modelContext: false }; throw error; }, { extensionId: ext.id });
+  assert.deepEqual(await call(listener, { target: POPUP_TARGET, method: "list_page_tools" }), { error: "WebMCP is not available", webmcp: { secureContext: false, modelContext: false } });
+});
+
+test("popup listener leaves WebMCP metadata out when absent", async () => {
+  const listener = createPopupListener(async () => { throw new Error("ordinary failure"); }, { extensionId: ext.id });
+  assert.deepEqual(await call(listener, { target: POPUP_TARGET, method: "list_page_tools" }), { error: "ordinary failure" });
+});
+
 test("popup listener passes index_list through (local explain index, read-only)", async () => {
   const listener = createPopupListener(async (method) => ({ method, entries: [] }), { extensionId: ext.id });
   assert.deepEqual(await call(listener, { target: POPUP_TARGET, method: "index_list" }), { result: { method: "index_list", entries: [] } });

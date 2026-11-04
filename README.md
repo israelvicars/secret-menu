@@ -16,7 +16,7 @@
 <p align="center"><sub>The popup on Secret Menu's built-in test shop (<code>./bin/secret-menu serve</code> in a clone, then open <code>/explain.html</code>). The shop and its 14 tools are fake.</sub></p>
 
 > [!NOTE]
-> An early side project, and experimental like WebMCP itself. It needs Chrome's WebMCP flag (or a site in Google's trial), on macOS or Linux. [Details](#requirements)
+> WebMCP is an experimental protocol. Turn on Chrome's WebMCP flag (or use a site in Google's trial). macOS or Linux. [Details](#requirements)
 
 **Why**
 

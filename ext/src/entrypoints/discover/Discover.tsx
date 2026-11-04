@@ -1,28 +1,31 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Copy, ExternalLink, Loader2, Search, Send } from "lucide-react";
+import { Check, Copy, ExternalLink, Loader2, Search, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LabelPill } from "@/components/label-pill";
 import { PageShell } from "@/components/page-shell";
 import { SiteIcon } from "@/components/site-icon";
-import { CATEGORIES, directory, handoffPrompt, loadIndex, recommend, searchCards, type SiteCard } from "@/lib/site-data";
+import { ConnectAgent } from "@/components/connect-agent";
+import { countPills } from "@/lib/count-pills";
+import { CATEGORIES, directory, handoffPrompt, isNoBridge, loadIndex, recommend, searchCards, showRecommended, type SiteCard } from "@/lib/site-data";
 import { cn } from "@/lib/utils";
 
-type State = { kind: "loading" } | { kind: "ready"; entries: unknown[] } | { kind: "error"; message: string };
+type State = { kind: "loading" } | { kind: "ready"; entries: unknown[] } | { kind: "connect" } | { kind: "error"; message: string };
 const ALL = "All";
 
 export function Discover() {
   const [state, setState] = useState<State>({ kind: "loading" });
   const [query, setQuery] = useState("");
   const [chip, setChip] = useState(ALL);
-  useEffect(() => { loadIndex().then((r) => setState({ kind: "ready", entries: r.entries }), (e) => setState({ kind: "error", message: String(e?.message ?? e) })); }, []);
+  useEffect(() => { loadIndex().then((r) => setState({ kind: "ready", entries: r.entries }), (e) => { const message = String(e?.message ?? e); setState(isNoBridge(message) ? { kind: "connect" } : { kind: "error", message }); }); }, []);
 
   return (
     <PageShell title="Discover sites with WebMCP" subtitle="Sites in your local index: ones Secret Menu has explained on this computer. Nothing here comes from a remote directory.">
       {state.kind === "loading" && <div role="status" aria-label="Loading: reading your local index" data-state="loading" className="flex items-center gap-2 text-muted-foreground"><Loader2 className="size-4 animate-spin" aria-hidden="true" /> Reading your local index…</div>}
+      {state.kind === "connect" && <div data-state="connect"><ConnectAgent why="Discover lists the sites Secret Menu has explained on this computer. That local index lives with the Secret Menu bridge, which isn't set up yet. The popup works without it." /></div>}
       {state.kind === "error" && (
         <div role="status" aria-label="Error: local index unavailable" data-state="error" className="space-y-1 text-sm">
           <div className="font-semibold">Can't read your local index</div>
-          <div className="text-muted-foreground">The index lives with the Secret Menu bridge, which isn't connected ({state.message}). Start it with <code className="font-mono">secret-menu launch</code>, then reopen this page.</div>
+          <div className="text-muted-foreground">The index lives with the Secret Menu bridge, which isn't connected ({state.message}). Run <code className="font-mono">npx secret-menu doctor</code> to see what's wrong, then reopen this page.</div>
         </div>
       )}
       {state.kind === "ready" && <Directory entries={state.entries} query={query} setQuery={setQuery} chip={chip} setChip={setChip} />}
@@ -37,6 +40,8 @@ function Directory({ entries, query, setQuery, chip, setChip }: { entries: unkno
   const hitSites = new Set(hits.map((c) => c.site));
   const shown = (c: SiteCard) => hitSites.has(c.site) && (chip === ALL || c.category === chip);
   const sections = dir.sections.map((s) => ({ ...s, sites: s.sites.filter(shown) })).filter((s) => s.sites.length);
+  const displayedSites = sections.flatMap((s) => s.sites);
+  const recommended = rec.items.filter(shown);
 
   if (!dir.total) {
     return <div role="status" aria-label="Empty state: local index is empty" data-state="empty-index" className="text-sm">Your local index is empty. Run <code className="font-mono">secret-menu explain</code> on a site with WebMCP tools and it will show up here.</div>;
@@ -46,6 +51,7 @@ function Directory({ entries, query, setQuery, chip, setChip }: { entries: unkno
       <div className="flex items-center gap-2 rounded-full border bg-background px-3.5 py-2">
         <Search className="size-4 text-muted-foreground" aria-hidden="true" />
         <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search sites, abilities or tool names" aria-label="Search sites" className="flex-1 bg-transparent text-sm outline-none" />
+        {query && <button type="button" aria-label="Clear search" title="Clear search" onClick={() => setQuery("")} className="text-muted-foreground hover:text-foreground"><X className="size-4" aria-hidden="true" /></button>}
       </div>
       <div role="radiogroup" aria-label="Category" className="flex flex-wrap gap-2">
         {[ALL, ...CATEGORIES].map((c) => (
@@ -54,13 +60,17 @@ function Directory({ entries, query, setQuery, chip, setChip }: { entries: unkno
         ))}
       </div>
 
-      <section aria-label="Recommended for you" data-testid="recommended">
+      {showRecommended(recommended, displayedSites, { query }) && <section aria-label="Recommended for you" data-testid="recommended">
         <h2 className="text-sm font-semibold">Recommended for you</h2>
         <div className="mb-1 text-xs text-muted-foreground">{rec.items.length ? `Why: ${rec.reason}.` : rec.reason}</div>
-        {rec.items.length > 0 && <ul className="divide-y" aria-label="Recommended sites">{rec.items.filter(shown).map((c) => <SiteRow key={c.site} c={c} />)}</ul>}
-      </section>
+        {recommended.length > 0 && <ul className="divide-y" aria-label="Recommended sites">{recommended.map((c) => <SiteRow key={c.site} c={c} />)}</ul>}
+      </section>}
 
-      {sections.length === 0 && <div role="status" aria-label="Empty state: no matching sites" data-state="empty-search" className="text-sm text-muted-foreground">No indexed site matches{query ? ` "${query}"` : ""}{chip !== ALL ? ` in ${chip}` : ""}.</div>}
+      {sections.length === 0 && <div role="status" aria-label="Empty state: no matching sites" data-state="empty-search" className="text-sm text-muted-foreground">
+        <span>No indexed site matches{query ? ` "${query}"` : ""}{chip !== ALL ? ` in ${chip}` : ""}.</span>
+        {query && <button type="button" onClick={() => setQuery("")} className="ml-2 underline">Clear search</button>}
+        {chip !== ALL && <button type="button" onClick={() => setChip(ALL)} className="ml-2 underline">Try All</button>}
+      </div>}
       {sections.map((s) => (
         <section key={s.category} aria-label={`${s.category}: ${s.total} site${s.total === 1 ? "" : "s"}`}>
           <h2 className="text-sm font-semibold">{s.category} <span className="font-normal text-muted-foreground">· top {s.sites.length} of {s.total} by tool count</span></h2>
@@ -93,10 +103,8 @@ function SiteRow({ c }: { c: SiteCard }) {
         </div>
         <div className="truncate text-xs text-muted-foreground">{c.oneLiner}</div>
         <div className="mt-0.5 flex flex-wrap gap-1">
-          {n?.safe ? <LabelPill label="safe">{n.safe} safe</LabelPill> : null}
-          {n?.changes ? <LabelPill label="changes data">{n.changes} changes</LabelPill> : null}
-          {n?.spends ? <LabelPill label="spends money">{n.spends} spends</LabelPill> : null}
-          <span className="text-[11px] italic text-from-guess" title={c.categoryBasis}>{c.category} (guessed)</span>
+          {countPills(n).map((pill) => <LabelPill key={pill.label} label={pill.label}>{pill.text}</LabelPill>)}
+          <span className="text-[11px] text-muted-foreground" title={c.categoryBasis}>{c.category} (guessed)</span>
           {c.verifiedAt && <span className="text-[11px] text-muted-foreground">verified {new Date(c.verifiedAt).toLocaleDateString()}</span>}
         </div>
       </div>

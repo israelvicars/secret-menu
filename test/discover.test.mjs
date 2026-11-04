@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { categorize, directory, displayName, recommend, searchCards, siteCards, CATEGORIES } from "../lib/discover.mjs";
+import { categorize, directory, displayName, recommend, searchCards, showRecommended, siteCards, CATEGORIES } from "../lib/discover.mjs";
 
 const shop = (host, title, verifiedAt, tools = 12) => ({ schema: "secret-menu.index/v1", indexKey: `https://${host}`, verifiedAt, title, description: null, counts: { tools }, abilities: [
   { title: "Search catalog and see cart", label: "safe", toolNames: ["search_catalog", "get_cart"] },
@@ -48,4 +48,25 @@ test("searchCards matches names, abilities and tool names by prefix", () => {
   assert.deepEqual(searchCards(cards, "traffic").map((c) => c.host), ["radar.cloudflare.com"]);
   assert.equal(searchCards(cards, "").length, 2);
   assert.equal(searchCards(cards, "flights").length, 0);
+});
+
+test("recommended is shown only when it adds a site beyond displayed categories", () => {
+  const a = { site: "https://a.example" }, b = { site: "https://b.example" };
+  assert.equal(showRecommended([a], [a]), false);
+  assert.equal(showRecommended([a, b], [a]), true);
+  assert.equal(showRecommended([], [a]), false);
+  assert.equal(showRecommended([b], [a], { query: "search" }), false);
+});
+
+test("one-liners are a single sentence-case line", () => {
+  const cards = siteCards([{ schema: "secret-menu.index/v1", indexKey: "https://x.example", title: "X", abilities: [
+    { title: "Search products", label: "safe", toolNames: ["search"] },
+    { title: "See your orders", label: "safe", toolNames: ["orders"] },
+  ] }]);
+  assert.equal(cards[0].oneLiner, "Search products; see your orders");
+  const acronym = siteCards([{ schema: "secret-menu.index/v1", indexKey: "https://mcp.example", title: "MCP", abilities: [
+    { title: "Find docs", label: "safe", toolNames: ["docs"] },
+    { title: "MCP settings", label: "safe", toolNames: ["settings"] },
+  ] }]);
+  assert.equal(acronym[0].oneLiner, "Find docs; MCP settings");
 });

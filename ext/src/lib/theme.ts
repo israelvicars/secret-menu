@@ -18,6 +18,14 @@ export const THEME_STATUS_ID = "sm-theme-status";
 export function themeStatusLabel(pref: ThemePref, resolved: "light" | "dark"): string {
   return `Effective theme: ${resolved}${pref === "system" ? " (following System)" : ""}`;
 }
+// The theme button cycles Light -> Dark -> System (UX spec v1 #24).
+const THEME_NAMES: Record<ThemePref, string> = { light: "Light", dark: "Dark", system: "System" };
+export function nextTheme(pref: ThemePref): ThemePref {
+  return THEME_PREFS[(THEME_PREFS.indexOf(pref) + 1) % THEME_PREFS.length] ?? "light";
+}
+export function themeButtonLabel(pref: ThemePref): string {
+  return `Theme: ${THEME_NAMES[pref]}. Switch to ${THEME_NAMES[nextTheme(pref)]}`;
+}
 export function effectiveTheme(pref: ThemePref): "light" | "dark" {
   return resolveTheme(pref, media().matches);
 }

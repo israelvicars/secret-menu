@@ -60,3 +60,13 @@ test("popup test hooks: stable main id/name, state names, details ids", async ()
   assert.equal(h.stateName({ kind: "error" }), "error");
   for (const r of ["not-web", "no-webmcp", "no-tools"]) assert.equal(h.stateName({ kind: "empty", reason: r }), `empty-${r}`);
 });
+
+test("theme button cycles Light -> Dark -> System and names the current and next theme (#24)", async () => {
+  const { nextTheme, themeButtonLabel } = await import("../ext/src/lib/theme.ts");
+  assert.equal(nextTheme("light"), "dark");
+  assert.equal(nextTheme("dark"), "system");
+  assert.equal(nextTheme("system"), "light");
+  assert.equal(themeButtonLabel("dark"), "Theme: Dark. Switch to System");
+  assert.equal(themeButtonLabel("system"), "Theme: System. Switch to Light");
+  assert.equal(themeButtonLabel("light"), "Theme: Light. Switch to Dark");
+});

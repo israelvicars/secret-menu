@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { Label } from "@/lib/abilities";
 
-const STYLE: Record<Label, string> = {
+export const LABEL_PILL_STYLES: Record<Label, string> = {
   safe: "bg-label-safe text-label-safe-foreground",
   "changes the view": "bg-label-view text-label-view-foreground",
   "needs sign-in": "bg-label-sign text-label-sign-foreground",
@@ -11,7 +11,7 @@ const STYLE: Record<Label, string> = {
 
 export function LabelPill({ label, children, className }: { label: Label; children?: React.ReactNode; className?: string }) {
   return (
-    <span className={cn("inline-flex h-[18px] items-center rounded-full px-1.5 text-[11px] font-medium leading-none whitespace-nowrap", STYLE[label], className)}>
+    <span className={cn("inline-flex h-[18px] items-center rounded-full px-1.5 text-[11px] font-medium leading-none whitespace-nowrap", LABEL_PILL_STYLES[label], className)}>
       {children ?? label}
     </span>
   );
@@ -23,7 +23,7 @@ export const shortFrom = (from: string) => (from === "from site hint" ? "hint" :
 export function LabelFrom({ from, compact = false }: { from: string; compact?: boolean }) {
   const hint = from === "from site hint";
   return (
-    <span title={compact ? from : undefined} className={cn("text-[11px] whitespace-nowrap", hint ? "text-from-hint" : "text-from-guess italic", compact && "text-[10.5px]")}>
+    <span title={compact ? from : undefined} className={cn("text-[11px] whitespace-nowrap text-muted-foreground", compact && "text-[10.5px]")}>
       {compact ? shortFrom(from) : from}
     </span>
   );

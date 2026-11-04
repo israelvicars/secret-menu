@@ -57,6 +57,15 @@ test("guesses: read names with spend inputs, unknown names, and sign-in wording"
   assert.deepEqual([named.signIn, named.signInSource, named.signInConfidence], [true, "guess", "low"]);
 });
 
+test("ability titles humanize acronyms and preserve singular account nouns", () => {
+  const profile = explainTools([T("get_ucp_profile", "Your profile.", { readOnlyHint: true })], { url: "https://account.example/" });
+  assert.equal(profile.abilities[0].title, "See your UCP profile");
+  const faqs = explainTools([T("list_faqs", "Frequently asked questions.", { readOnlyHint: true })], { url: "https://help.example/" });
+  assert.match(faqs.abilities[0].title, /FAQs/);
+  const order = explainTools([T("get_order_by_id", "Order details.", { readOnlyHint: true })], { url: "https://shop.example/" });
+  assert.match(order.abilities[0].title, /ID/);
+});
+
 test("explainTools groups a shop into a few abilities with a header", () => {
   const r = explainTools(shop, { url: "https://numbers.example/app", tabId: 7, cli: "./bin/secret-menu" });
   assert.equal(r.header, "This site has WebMCP: 11 tools: 3 safe, 3 need sign-in, 4 change data, 1 spends money");
@@ -114,6 +123,42 @@ test("probe results and the summary hook", () => {
 test("example commands quote placeholders and use schema examples", () => {
   const tool = T("add_item", "", {}, obj({ item: { type: "string", enum: ["tea"] }, qty: { type: "integer" }, note: { type: "string" } }, ["item", "qty", "note"]));
   assert.equal(exampleCommand(classifyTool(tool), tool, { tabId: 3 }), "secret-menu call add_item --tab 3 --arg item=tea --arg qty=1 --arg 'note=<note>'");
+});
+
+test("example commands build useful JSON for object and array params", () => {
+  const tool = T("show_variant", "", {}, obj({
+    catalog: { type: "object", properties: { id: { type: "string" }, locale: { type: "string" } }, required: ["id"] },
+    tags: { type: "array", items: { type: "string" } },
+  }, ["catalog", "tags"]));
+  assert.equal(exampleCommand(classifyTool(tool), tool), "secret-menu call show_variant --arg 'catalog={\"id\":\"<id>\"}' --arg 'tags=[\"<tags item>\"]'");
+});
+
+test("example commands use a readable placeholder for empty object schemas", () => {
+  const tool = T("show_variant", "", {}, obj({ catalog: { type: "object", properties: {} } }, ["catalog"]));
+  const command = exampleCommand(classifyTool(tool), tool);
+  assert.equal(command, "secret-menu call show_variant --arg 'catalog=<catalog JSON>'");
+  assert.doesNotMatch(command, /catalog=\{\}/);
+});
+
+test("example commands use the first oneOf object branch", () => {
+  const tool = T("show_variant", "", {}, obj({ catalog: {
+    type: "object",
+    oneOf: [
+      { type: "object", properties: { variant_id: { type: "string" } }, required: ["variant_id"] },
+      { type: "object", properties: { selected_options: { type: "object" } }, required: ["selected_options"] },
+    ],
+  } }, ["catalog"]));
+  assert.equal(exampleCommand(classifyTool(tool), tool), "secret-menu call show_variant --arg 'catalog={\"variant_id\":\"<variant_id>\"}'");
+});
+
+test("example commands infer untyped oneOf objects", () => {
+  const tool = T("show_variant", "", {}, obj({ catalog: {
+    oneOf: [
+      { properties: { variant_id: { type: "string" } }, required: ["variant_id"] },
+      { properties: { selected_options: { properties: {} } }, required: ["selected_options"] },
+    ],
+  } }, ["catalog"]));
+  assert.equal(exampleCommand(classifyTool(tool), tool), "secret-menu call show_variant --arg 'catalog={\"variant_id\":\"<variant_id>\"}'");
 });
 
 test("a brand prefix shared by every tool is stripped before reading the verb", () => {

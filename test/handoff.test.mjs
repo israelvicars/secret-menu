@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { handoffPlan, handoffPrompt } from "../lib/handoff.mjs";
+import { handoffGroups, handoffPlan, handoffPrompt } from "../lib/handoff.mjs";
 
 const allbirds = [
   { title: "Search catalog", label: "safe", toolNames: ["search_catalog", "get_cart"] },
@@ -20,9 +20,21 @@ test("handoff plan: reads run, changes and spends are off by default", () => {
   assert.deepEqual(q.never.map((t) => t.name), ["proceed_to_checkout"]);
 });
 
+test("handoff groups keep each ability whole and follow the plan buckets", () => {
+  const groups = handoffGroups(allbirds);
+  assert.deepEqual(groups.run.map((a) => a.title), ["Search catalog", "Browse store", "See your ucp profiles"]);
+  assert.deepEqual(groups.ask, []);
+  assert.deepEqual(groups.never.map((a) => a.title), ["Add to cart", "Proceed to checkout"]);
+  const enabled = handoffGroups(allbirds, { allowChanges: true, allowSpends: true });
+  for (const bucket of ["run", "ask", "never"]) {
+    assert.equal(enabled[bucket].flatMap((a) => a.toolNames).length, handoffPlan(allbirds, { allowChanges: true, allowSpends: true })[bucket].length);
+  }
+  assert.deepEqual(enabled.ask.map((a) => a.title), ["Add to cart", "Proceed to checkout"]);
+});
+
 test("handoff prompt uses real tool names and never allows checkout unless asked", () => {
   const s = handoffPrompt({ host: "www.allbirds.com", task: "find men's running shoes under $120 in size 10 and add the best one to my cart.", abilities: allbirds, allowChanges: true });
-  assert.equal(s, "On allbirds.com, find men's running shoes under $120 in size 10 and add the best one to my cart. Use the page's WebMCP tools through Secret Menu: search_catalog, get_cart, browse_store and get_ucp_profile to look (these only read or change the view), then add_to_cart. Before calling add_to_cart, show me exactly what will change and wait for my yes. Never call proceed_to_checkout. If a tool needs sign-in, ask me to sign in in the Secret Menu Chrome; never ask for my password. Stop before confirming.");
+  assert.equal(s, "On allbirds.com, find men's running shoes under $120 in size 10 and add the best one to my cart. Use the page's WebMCP tools through Secret Menu: search_catalog, get_cart, browse_store and get_ucp_profile to look (these only read or change the view), then add_to_cart. Before calling add_to_cart, show me exactly what will change and wait for my yes. Never call proceed_to_checkout. If a tool needs sign-in, ask me to sign in to the site in the Secret Menu Chrome window; never ask for my password. Stop before confirming.");
   assert.match(handoffPrompt({ host: "a.com", abilities: allbirds }), /^On a\.com, <what you want done>\./);
   assert.match(handoffPrompt({ host: "a.com", abilities: allbirds, allowSpends: true }), /show me exactly what will change or be charged/);
   assert.match(handoffPrompt({ host: "a.com", abilities: [] }), /no WebMCP tools you have allowed/);

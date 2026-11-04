@@ -43,4 +43,4 @@ Found in live tests with Chrome for Testing 156 and the WebMCP flag on. "Fixed i
 ## Decisions
 
 - **Pass site text through.** Page tool output, including a site's suggested next steps, is returned untouched apart from the 20,000-character cap. The agent's own approval UI is the check on actions that change data or spend money.
-- **Safety is opt-in.** The default is `{"guard": false, "audit": false}`. Per-site allowlist and strict entries apply to `secret-menu call` and MCP `call_page_tool` whether or not safety is on. They don't apply to `run_recipe` or to programs that talk to the bridge socket directly (see the README's safety limits).
+- **Safety is opt-in.** The default is `{"guard": false, "audit": false}`. Per-site allowlist and strict entries apply to `secret-menu call`, MCP `call_page_tool` and `explain --probe` whether or not safety is on; the native host and the extension don't check policy themselves. They don't apply to `run_recipe` or to programs that talk to the bridge socket directly (see the README's safety limits).

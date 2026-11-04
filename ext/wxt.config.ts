@@ -13,8 +13,8 @@ export default defineConfig({
   manifestVersion: 3,
   browser: "chrome",
   manifest: {
-    name: "Secret Menu",
-    description: "Inspects and calls WebMCP tools in your Chrome tabs through a local bridge.",
+    name: "Secret Menu for WebMCP",
+    description: "Secret Menu for WebMCP connects you and your agent to tools across sites. Discover a page's abilities, hand them to your agent.",
     minimum_chrome_version: "155",
     key: KEY,
     permissions: ["nativeMessaging", "tabs", "scripting", "storage"],

@@ -1,5 +1,8 @@
 import { applySnapshot } from "./watch-logic.js";
 
+// Shown by extension pages when the native host is missing; matched by NO_BRIDGE_RE in lib/site-data.ts.
+export const NO_BRIDGE = "Secret Menu isn't connected to this computer yet. Run npx secret-menu setup once, then reopen this page.";
+
 // Bridge service worker, moved unchanged from extension/background.js. Wrapped in startBridge() so
 // WXT can import this module at build time without running it; the body is not re-indented on purpose
 // (keeps the move diff small). contentScriptFile: where the built content script lives.
@@ -9,6 +12,7 @@ const STARTED_AT = new Date().toISOString();
 let port = null;
 let reconnectCount = 0;
 let retryMs = 500;
+let hostSeen = false; // set once this port gets a message or survives 2s: a real host, not "not installed"
 let mostRecentWebTabId = null;
 const watchedTabs = new Set();
 let lastTools = new Map();
@@ -19,7 +23,7 @@ const isWeb = (url) => /^https?:\/\//.test(url ?? "");
 const hostPending = new Map();
 let nextHostId = 1;
 function hostRequest(method, params = {}, timeoutMs = 5000) {
-  if (!port) return Promise.reject(new Error("The Secret Menu bridge is not connected (start it with secret-menu launch)."));
+  if (!port) return Promise.reject(new Error(NO_BRIDGE));
   const id = nextHostId++;
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => { hostPending.delete(id); reject(new Error("The Secret Menu bridge did not answer in time.")); }, timeoutMs);
@@ -37,16 +41,22 @@ function emit(event) {
 }
 
 function connect() {
+  const openedAt = Date.now();
   port = chrome.runtime.connectNative(HOST);
-  port.onMessage.addListener(onHostMessage);
+  port.onMessage.addListener((msg) => { hostSeen = true; return onHostMessage(msg); });
   port.onDisconnect.addListener(() => {
-    for (const p of hostPending.values()) { clearTimeout(p.timer); p.reject(new Error("The Secret Menu bridge disconnected.")); }
+    // Reading lastError keeps Chrome from logging "Unchecked runtime.lastError". A host that is simply not
+    // installed (no `secret-menu setup` yet) is a normal state: retry quietly, no console noise.
+    const why = chrome.runtime.lastError?.message;
+    const wasLive = hostSeen || Date.now() - openedAt > 2000;
+    hostSeen = false;
+    for (const p of hostPending.values()) { clearTimeout(p.timer); p.reject(new Error(`${NO_BRIDGE} (The bridge disconnected.)`)); }
     hostPending.clear();
-    console.warn("[secret-menu] host disconnected", chrome.runtime.lastError?.message);
+    if (wasLive) console.warn("[secret-menu] host disconnected", why);
     port = null;
     reconnectCount++;
     setTimeout(connect, retryMs);
-    retryMs = Math.min(retryMs * 2, 10000);
+    retryMs = Math.min(retryMs * 2, wasLive ? 10000 : 30000);
   });
   retryMs = 500;
   post({

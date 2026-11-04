@@ -29,7 +29,7 @@ In System Settings > Privacy & Security, give **Accessibility** and **Screen Rec
 message handler and copy, the popup message API, and the fixture contract below.
 `cd ext && npx tsc --noEmit && npx wxt build` type-checks and builds into `ext/.output/chrome-mv3`.
 
-Name checks (no Chrome): `test/cli-names.test.mjs` covers `secret-menu --help`, package names and the host name. The extension ID is unchanged.
+Name checks (no Chrome): `test/cli-names.test.mjs` covers `secret-menu --help`, package names and the host name. CLI `tools`/`form` headers use the popup's five plain labels and a secondary raw-hint line; JSON remains the raw tool list. The extension ID is unchanged.
 
 ## Toolbar and windows
 
@@ -47,32 +47,41 @@ Name checks (no Chrome): `test/cli-names.test.mjs` covers `secret-menu --help`, 
 - Root `main#sm-main[data-state]`: `loading`, `ready`, `empty-not-web`, `empty-no-webmcp`, `empty-no-tools`, `error`.
   Accessible name `Secret Menu popup` (as a tab: `Secret Menu abilities page`); its description (`aria-describedby=sm-main-state`,
   an sr-only span) reads `State: <state>`, so the AX tree shows the state without DOM access.
-- Loading: `role=status`, aria-label `Loading: reading this page's WebMCP tools`.
-- Empty states have aria-labels starting `Empty state:`; the error state has aria-label `Error: couldn't read this page`.
+- Loading: `role=status`, aria-label `Loading: reading this page's WebMCP tools`, `data-state=loading`. It is a skeleton with the ready layout (header, count row, 6 rows, read line), invisible for the first 150 ms and then shown; there is no fixed min-height.
+- Empty states have aria-labels starting `Empty state:`; the error state has aria-label `Error: couldn't read this page`. Error details are in a collapsed native `<details>` under `summary` `Details`, with the raw message in `[data-testid=error-detail]`.
+- Ready reports include a single-line, non-wrapping `aria-label="Tool counts by label"` row of non-zero count pills below the site summary.
 - Each ability is `li[data-testid=ability-row][data-label=<label>]` with aria-label `Ability: <title>, <label>`.
 - Its expand button has `aria-expanded` and `aria-controls`, plus aria-label `Show details for <title>` (or `Hide details for <title>` when it's open).
 - Expanded content: region `#sm-details-<n>` (`n` = 0-based row index, stable for a given page), `role=region`,
   `[data-testid=ability-details]`, accessible name `Details for <title>`; the row button's `aria-controls` points at it.
   Inside: tool codes, notes, `[data-testid=agent-prompt]` and a `Copy agent prompt` button.
+- Ability titles wrap (`[data-testid=ability-title]`, never truncated); the full title is also in `title`. The chevron (`[data-testid=row-chevron]`) and label pill are top-aligned to the first title line, not centered on the row.
+- Under the rows, `[data-testid=read-note]` always says `No page tools were called.` or `Probed N read-only tool(s).`; the label legend `[data-testid=label-legend]` (hint / guessed / mixed) is only rendered while at least one row is expanded.
+- Scroll cue: `main` has `data-more-below=true|false`; while true, `[data-testid=scroll-cue]` (a fade over the bottom edge of the scroll area, outside the scrolling content) is rendered and the nav gets a top shadow.
 - `Re-check this page's tools` button; nav `Secret Menu pages` with `Hand off to an agent` and `Discover sites`.
-- Site icon: `[data-testid=site-favicon]` (tab favIconUrl) or `[data-testid=site-letter]`.
+- Site icon: `[data-testid=site-favicon]` (tab favIconUrl) or `[data-testid=site-mark]` (no favicon); the former `site-letter` tile was removed.
 
 ## Theme toggle (popup, hand-off, discover)
 
-Three toggle buttons `Light`, `Dark`, `System`, each exposing `aria-pressed` (the AX tree shows pressed=true on the active one).
+One button `[data-testid=theme-toggle]` (no menu) cycles Light → Dark → System. Its accessible name and tooltip are `Theme: <Current>. Switch to <Next>` (e.g. `Theme: Dark. Switch to System`), its icon is a sun, moon or monitor, and it carries `data-theme-pref`. To reach a given theme, click until the name starts with `Theme: <Wanted>.` (at most two clicks).
 Stored in `chrome.storage.local["secretMenu.theme"]`. The effective theme is `html.dark` (popup/pages) and
 `data-theme` on the badge.
 
 Effective theme in the AX tree: `#sm-theme-status` (sr-only, `role=status`) is named
-`Effective theme: light|dark`, with ` (following System)` appended when System is chosen; the toggle group's
+`Effective theme: light|dark`, with ` (following System)` appended when System is chosen; the button's
 `aria-describedby` points at it. DOM: `data-theme-effective` and `data-theme-pref` on the same element.
 
 ## Hand-off and Discover
 
-- Hand-off: the switches `Let it change data (asks first)` and `Let it spend money (asks first)` are role `switch` (both off by default); plan lists are `[data-testid=plan-run|plan-ask|plan-never]`; prompt is `[data-testid=handoff-prompt]`. `Run in agent` is disabled on purpose (not built).
-- Discover: search box `Search sites`; categories are a radiogroup (`aria-checked`); `[data-testid=recommended]`;
+- Hand-off: the switches `Let it change data (asks first)` and `Let it spend money (asks first)` are role `switch` (both off by default); plan lists are `[data-testid=plan-run|plan-ask|plan-never]`; prompt is `[data-testid=handoff-prompt]`. plan lists group tools by ability (disclosure per ability, tool names inside); `Run in agent` is hidden (not built; `SHOW_RUN_IN_AGENT` in Handoff.tsx).
+- Discover: search box `Search sites` with a `Clear search` button while a query is active; categories are a radiogroup (`aria-checked`); `[data-testid=recommended]` is only rendered when it adds sites beyond the displayed categories and is hidden while a query is active;
   rows `[data-testid=site-row]` with `Open`, `Hand off`, `Copy agent prompt`; footer `[data-testid=discover-footer]`.
   Empty states: `[data-testid=empty-index|empty-search|empty-category]`; error text `Error: local index unavailable`.
+- No native host (before `npx secret-menu setup`): not an error. Discover renders `[data-state=connect]` with
+  `[data-testid=connect-agent]` (`role=status`, named `Connect your agent`, a `Copy setup command` button) instead of the
+  error; `Error: local index unavailable` is only for a bridge that is installed but fails. Hand-off `?site=` renders the same
+  connect state; hand-off `?tab=` still works and adds `[data-testid=connect-agent]` above the plan lists. The popup is unchanged.
+  The service worker logs nothing while the host is missing (it retries quietly, up to every 30s).
 
 ## In-page badge
 

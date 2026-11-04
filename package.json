@@ -2,14 +2,42 @@
   "name": "secret-menu",
   "version": "0.1.0",
   "license": "MIT",
-  "private": true,
+  "description": "Let your AI agent use the WebMCP tools sites expose in your Chrome, through the Secret Menu extension.",
   "type": "module",
   "bin": {
     "secret-menu": "bin/secret-menu"
   },
+  "files": [
+    "bin/",
+    "lib/",
+    "host/",
+    "ext/EXTENSION_ID",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/israelvicars/secret-menu.git"
+  },
+  "homepage": "https://github.com/israelvicars/secret-menu#readme",
+  "bugs": {
+    "url": "https://github.com/israelvicars/secret-menu/issues"
+  },
+  "keywords": [
+    "webmcp",
+    "mcp",
+    "model-context-protocol",
+    "chrome-extension",
+    "ai-agent",
+    "native-messaging"
+  ],
   "scripts": {
     "test": "node --test test/*.test.mjs",
     "ext:build": "npm --prefix ext run build",
     "ext:dev": "npm --prefix ext run dev"
-  }
+  },
+  "mcpName": "io.github.israelvicars/secret-menu"
 }

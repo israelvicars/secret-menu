@@ -12,7 +12,7 @@ test("secret-menu --help prints usage and the data dir", () => {
   const home = mkdtempSync(join(tmpdir(), "secret-menu-cli-"));
   try {
     const r = run("bin/secret-menu", ["--help"], { SECRET_MENU_HOME: home });
-    assert.equal(r.status, 0); assert.match(r.stdout, /^usage: secret-menu </); assert.ok(r.stdout.includes(home)); assert.equal(r.stderr, "");
+    assert.equal(r.status, 0); assert.match(r.stdout, /^🗝️ Secret Menu connects you and your agent to WebMCP tools across sites\./); assert.match(r.stdout, /Start here:/); assert.ok(r.stdout.includes(home)); assert.equal(r.stderr, "");
   } finally { rmSync(home, { recursive: true, force: true }); }
 });
 

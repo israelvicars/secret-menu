@@ -171,11 +171,3 @@ npx secret-menu uninstall
 ```
 
 This removes only what setup wrote. Your data in `~/.secret-menu` stays; delete that folder to remove it. Then remove the extension from Chrome.
-
-## Credits
-
-The 🗝️ icon is [Twemoji](https://github.com/jdecked/twemoji) "old key" (1f5dd), © Twitter, Inc. and other contributors, used under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). See [NOTICE.md](NOTICE.md).
-
-## License
-
-[MIT](LICENSE) © 2026 Israel Vicars. The 🗝️ icon is licensed separately under CC-BY 4.0 (see Credits).

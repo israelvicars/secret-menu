@@ -11,7 +11,7 @@ export const HOST_PERMISSIONS = ["http://*/*", "https://*/*"];
 export function buildManifest({ store = false } = {}) {
   return {
     name: "Secret Menu for WebMCP",
-    description: "Secret Menu for WebMCP connects you and your agent to tools across sites. Discover a page's abilities, hand them to your agent.",
+    description: "See the WebMCP tools a website offers, and let your agent use them as you.",
     minimum_chrome_version: "155",
     permissions: PERMISSIONS,
     host_permissions: HOST_PERMISSIONS,

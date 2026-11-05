@@ -126,7 +126,9 @@ test("extension IDs: flags, then env, then the known IDs; bad IDs are refused", 
   assert.deepEqual(resolveExtensionIds({ env: { SECRET_MENU_EXTENSION_ID: "b".repeat(32) } }).ids, ["b".repeat(32), ...KNOWN_EXTENSION_IDS]);
   assert.deepEqual(resolveExtensionIds({ env: {} }).ids, KNOWN_EXTENSION_IDS);
   assert.equal(DEFAULT_EXTENSION_ID, readFileSync(new URL("../ext/EXTENSION_ID", import.meta.url), "utf8").trim());
-  assert.ok(STORE_EXTENSION_ID === null || EXTENSION_ID_RE.test(STORE_EXTENSION_ID));
+  assert.equal(STORE_EXTENSION_ID, "ldijmoknbnamjlegbeplefpmhhfmjakh");
+  assert.ok(EXTENSION_ID_RE.test(STORE_EXTENSION_ID));
+  assert.deepEqual(KNOWN_EXTENSION_IDS, [DEFAULT_EXTENSION_ID, STORE_EXTENSION_ID]);
   assert.throws(() => resolveExtensionIds({ flags: [DUMMY, "zzz"], env: {} }), /Not a Chrome extension ID/);
   assert.deepEqual(resolveExtensionIds({ env: { SECRET_MENU_EXTENSION_ID: ` ${"b".repeat(32)}, ${"c".repeat(32)} ` } }).ids, ["b".repeat(32), "c".repeat(32), ...KNOWN_EXTENSION_IDS]);
 });
@@ -136,7 +138,12 @@ test("setup without an ID flag includes exactly the known IDs", () => {
   try {
     assert.equal(cli(["setup"], sb).status, 0);
     const manifestPath = join(hostsDir(sb), `${HOST_NAME}.json`);
-    assert.deepEqual(JSON.parse(readFileSync(manifestPath, "utf8")).allowed_origins, KNOWN_EXTENSION_IDS.map((id) => `chrome-extension://${id}/`));
+    const origins = JSON.parse(readFileSync(manifestPath, "utf8")).allowed_origins;
+    assert.deepEqual(origins, [
+      "chrome-extension://jfeobmnppdjonobichecmfkabddogeim/",
+      "chrome-extension://ldijmoknbnamjlegbeplefpmhhfmjakh/",
+    ]);
+    assert.deepEqual(origins, KNOWN_EXTENSION_IDS.map((id) => `chrome-extension://${id}/`));
   } finally { sb.done(); }
 });
 

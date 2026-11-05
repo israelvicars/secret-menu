@@ -27,7 +27,7 @@
 ## Try it in 5 minutes
 
 1. In Chrome, open `chrome://flags/#enable-webmcp-testing`, set it to **Enabled**, and relaunch.
-2. Install the extension. The Chrome Web Store listing is coming soon. Until then, build it and load it unpacked:
+2. Install the extension from the [Chrome Web Store](https://chromewebstore.google.com/detail/ldijmoknbnamjlegbeplefpmhhfmjakh). **In review: this link goes live once Chrome Web Store approves it.** Until then, build it and load it unpacked:
 
    ```sh
    git clone https://github.com/israelvicars/secret-menu.git
@@ -113,7 +113,7 @@ Setup is safe to run again. It finds your Chrome-family browsers and installs in
 - Node.js 22 or newer.
 - Google Chrome (or Chrome Beta, Dev or Canary on macOS, or Chromium) on **macOS or Linux**. Windows isn't supported yet.
 - **WebMCP turned on.** Stable Chrome needs `chrome://flags/#enable-webmcp-testing`. Without it, Chrome only exposes WebMCP tools on sites in Google's WebMCP origin trial (Chrome 149 to 162, ending March 30, 2027). WebMCP has no ship date in stable Chrome yet, and most of our testing ran with the flag on.
-- The Secret Menu extension. The Chrome Web Store listing is coming soon; until then, load it unpacked (see [Try it](#try-it-in-5-minutes)).
+- The Secret Menu extension. [Chrome Web Store](https://chromewebstore.google.com/detail/ldijmoknbnamjlegbeplefpmhhfmjakh) (**In review: this link goes live once Chrome Web Store approves it.**). Until then, load it unpacked (see [Try it](#try-it-in-5-minutes)).
 
 If the popup can't find WebMCP on a page, it tells you and links to the flag:
 

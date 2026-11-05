@@ -36,8 +36,7 @@
    ```
 
    Open `chrome://extensions`, turn on **Developer mode**, choose **Load unpacked** and pick `ext/.output/chrome-mv3`.
-3. In the same `secret-menu` folder, run `./bin/secret-menu serve` and open `http://127.0.0.1:8765/explain.html`. (Port busy? Add `--port 8766`.)
-   <!-- Back to `npx secret-menu serve` once secret-menu@0.1.1 is on npm (0.1.0 has no serve). -->
+3. Run `npx secret-menu serve` and open `http://127.0.0.1:8765/explain.html`. (Port busy? Add `--port 8766`.)
 4. Click the 🗝️ in your toolbar (pin it from the puzzle-piece menu), or the badge on the page. You should see 14 tools in six abilities.
 
 The extension works on its own. To let an agent use the tools too, connect it:
